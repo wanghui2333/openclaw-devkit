@@ -1,0 +1,175 @@
+# ==============================================================================
+# OpenClaw Docker Compose Development Environment
+# ==============================================================================
+# Quick Start:
+#   ./docker-dev-setup.sh                              # 启动服务
+#   docker compose -f docker-compose.dev.yml logs -f   # 查看日志
+#   docker compose -f docker-compose.dev.yml down      # 停止服务
+#
+# Key Features:
+#   - Claude Code CLI 内置
+#   - 代理配置 (访问 Google/Claude API)
+#   - Go/TypeScript/Python 开发环境
+#   - 浏览器自动化 (Playwright)
+#   - Office 文件处理 (pandoc + LaTeX)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# YAML Anchors for DRY Configuration
+# ------------------------------------------------------------------------------
+x-openclaw-common: &openclaw-common
+  build:
+    context: .openclaw_src
+    dockerfile: ../Dockerfile.dev
+    args:
+      HTTP_PROXY: ${HTTP_PROXY:-}
+      HTTPS_PROXY: ${HTTPS_PROXY:-}
+  image: openclaw:dev
+  environment: &common-env
+    HOST_UID: ${HOST_UID:-1000}
+    # ─────────────────────────────────────────────────────────────────
+    # Proxy Configuration
+    # ─────────────────────────────────────────────────────────────────
+    # Required for accessing Google and Claude API from China
+    # Ports: 7897 (HTTP proxy), 15721 (Claude API proxy)
+    # ─────────────────────────────────────────────────────────────────
+    HTTP_PROXY: http://host.docker.internal:7897
+    HTTPS_PROXY: http://host.docker.internal:7897
+    NO_PROXY: localhost,127.0.0.1,host.docker.internal,.local,.internal
+    # ─────────────────────────────────────────────────────────────────
+    # Claude API Configuration
+    # ─────────────────────────────────────────────────────────────────
+    ANTHROPIC_AUTH_TOKEN: PROXY_MANAGED
+    ANTHROPIC_BASE_URL: http://host.docker.internal:15721
+    API_TIMEOUT_MS: "3000000"
+    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1"
+    CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: "1"
+    # ─────────────────────────────────────────────────────────────────
+    # Runtime Configuration
+    # ─────────────────────────────────────────────────────────────────
+    PLAYWRIGHT_BROWSERS_PATH: /home/node/.cache/ms-playwright
+    HOME: /home/node
+    TERM: xterm-256color
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+  logging: &common-logging
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+  deploy: &common-deploy
+    resources:
+      limits:
+        memory: 4G
+        cpus: '4.0'
+      reservations:
+        memory: 1G
+        cpus: '0.5'
+  restart: unless-stopped
+
+# ------------------------------------------------------------------------------
+# Named Volumes
+# ------------------------------------------------------------------------------
+volumes:
+  openclaw-node-modules:
+    name: openclaw-node-modules
+  openclaw-go-mod:
+    name: openclaw-go-mod
+  openclaw-playwright-cache:
+    name: openclaw-playwright-cache
+  openclaw-playwright-bin:
+    name: openclaw-playwright-bin
+  # Isolated session storage (avoid host path conflicts)
+  openclaw-sessions-main:
+    name: openclaw-sessions-main
+  openclaw-sessions-codex:
+    name: openclaw-sessions-codex
+
+services:
+  # ============================================================================
+  # OpenClaw Gateway
+  # ============================================================================
+  openclaw-gateway:
+    <<: *openclaw-common
+    user: "0:0"  # Run as root to fix permissions
+    container_name: openclaw-gateway
+    ports:
+      - "127.0.0.1:18789:18789"
+      - "127.0.0.1:18790:18790"
+    env_file:
+      - .env
+    volumes:
+      # OpenClaw config directory (mount entire dir to avoid single-file permission issues)
+      - ${HOME}/.openclaw:/home/node/.openclaw-host:ro
+      # Agent configs (read-only)
+      - ${HOME}/.openclaw/agents/main/agent:/home/node/.openclaw-host/agents/main/agent:ro
+      - ${HOME}/.openclaw/agents/codex/agent:/home/node/.openclaw-host/agents/codex/agent:ro
+      # Workspace (project files)
+      - ${HOME}/.openclaw/workspace:/home/node/.openclaw/workspace:rw
+      # Claude Code session state (shared with host)
+      - ${HOME}/.claude:/home/node/.claude:rw
+      # Git configuration
+      - ${HOME}/.gitconfig-hotplex:/home/node/.gitconfig:ro
+      # Named volumes for caches
+      - openclaw-node-modules:/app/node_modules:rw
+      - openclaw-go-mod:/home/node/go/pkg/mod:rw
+      - openclaw-playwright-cache:/home/node/.cache/ms-playwright:rw
+      # Named volumes for isolated session storage (avoid host path conflicts)
+      - openclaw-sessions-main:/home/node/.openclaw/agents/main/sessions:rw
+      - openclaw-sessions-codex:/home/node/.openclaw/agents/codex/sessions:rw
+    command:
+      - "sh"
+      - "-c"
+      - "mkdir -p /home/node/.openclaw/agents/main/sessions /home/node/.openclaw/agents/codex/sessions && cp -r /home/node/.openclaw-host/* /home/node/.openclaw/ 2>/dev/null || true && cp -r /home/node/.openclaw-host/agents/main/agent /home/node/.openclaw/agents/main/ 2>/dev/null || true && cp -r /home/node/.openclaw-host/agents/codex/agent /home/node/.openclaw/agents/codex/ 2>/dev/null || true && chown -R node:node /home/node/.openclaw && node dist/index.js config set gateway.controlUi.allowedOrigins '[\"http://127.0.0.1:18789\"]' --strict-json && node dist/index.js gateway --bind lan --port 18789"
+    healthcheck: &common-healthcheck
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:18789/healthz').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    labels:
+      - "openclaw.service=gateway"
+      - "openclaw.environment=dev"
+
+  # ============================================================================
+  # OpenClaw CLI
+  # ============================================================================
+  openclaw-cli:
+    <<: *openclaw-common
+    container_name: openclaw-cli
+    depends_on:
+      openclaw-gateway:
+        condition: service_healthy
+    cap_drop:
+      - NET_RAW
+      - NET_ADMIN
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      <<: *common-env
+      BROWSER: echo
+    volumes:
+      # OpenClaw config directory (mount entire dir to avoid single-file permission issues)
+      - ${HOME}/.openclaw:/home/node/.openclaw-host:ro
+      # Workspace (project files)
+      - ${HOME}/.openclaw/workspace:/home/node/.openclaw/workspace:rw
+      # Claude Code session state (shared with host)
+      - ${HOME}/.claude:/home/node/.claude:rw
+      # Git configuration
+      - ${HOME}/.gitconfig-hotplex:/home/node/.gitconfig:ro
+      # Named volumes for caches
+      - openclaw-node-modules:/app/node_modules:rw
+      - openclaw-go-mod:/home/node/go/pkg/mod:rw
+      - openclaw-playwright-cache:/home/node/.cache/ms-playwright:rw
+      # Named volumes for isolated session storage (avoid host path conflicts)
+      - openclaw-sessions-main:/home/node/.openclaw/agents/main/sessions:rw
+      - openclaw-sessions-codex:/home/node/.openclaw/agents/codex/sessions:rw
+    stdin_open: true
+    tty: true
+    entrypoint:
+      - "sh"
+      - "-c"
+      - "mkdir -p /home/node/.openclaw/agents/main/sessions /home/node/.openclaw/agents/codex/sessions && cp -r /home/node/.openclaw-host/* /home/node/.openclaw/ 2>/dev/null || true && chmod -R 777 /home/node/.openclaw 2>/dev/null || true && exec node dist/index.js"
+    labels:
+      - "openclaw.service=cli"
+      - "openclaw.environment=dev"
