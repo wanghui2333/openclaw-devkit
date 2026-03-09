@@ -1,6 +1,10 @@
 # OpenClaw 开发工具箱套件 (OpenClaw DevKit)
 
-[![OpenClaw](https://img.shields.io/badge/Powered%20By-OpenClaw-blue)](https://github.com/openclaw/openclaw) [![Docker](https://img.shields.io/badge/Environment-Docker-blue?logo=docker)](https://www.docker.com/) [![Claude Code](https://img.shields.io/badge/Built%20With-Claude%20Code-purple)](https://claude.ai/code)
+<p align="center">
+  <a href="https://github.com/openclaw/openclaw"><img src="https://img.shields.io/badge/Powered%20By-OpenClaw-blue" alt="OpenClaw"></a>
+  <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Environment-Docker-blue?logo=docker" alt="Docker"></a>
+  <a href="https://claude.ai/code"><img src="https://img.shields.io/badge/Built%20With-Claude%20Code-purple" alt="Claude Code"></a>
+</p>
 
 **OpenClaw 开发工具箱套件** 为 [OpenClaw](https://github.com/openclaw/openclaw) 多通道 AI 生产力工具提供完整的容器化开发、调试与运行环境。
 
