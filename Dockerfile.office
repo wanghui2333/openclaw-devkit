@@ -136,7 +136,6 @@ WORKDIR /app
 
 # 创建非 root 用户 (官方推荐: 安全加固)
 RUN useradd --create-home --shell /bin/bash node || true
-RUN chown node:node /app
 
 # 复制构建产物
 COPY --from=builder --chown=node:node /app/dist ./dist
@@ -145,6 +144,9 @@ COPY --from=builder --chown=node:node /app/package.json .
 COPY --from=builder --chown=node:node /app/openclaw.mjs .
 COPY --from=builder --chown=node:node /app/extensions ./extensions
 COPY --from=builder --chown=node:node /app/skills ./skills
+
+# 改变目录 owner
+RUN chown -R node:node /app
 
 # 安装 Chromium (可选, 官方推荐参数化)
 ARG OPENCLAW_INSTALL_BROWSER=""
