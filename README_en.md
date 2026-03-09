@@ -19,7 +19,8 @@ It integrates an out-of-the-box toolchain designed to help developers quickly bu
 - 🚀 **One-Click Environment Setup**: Based on Docker Compose, start a complete development environment in seconds.
 - 🛠️ **Dual Image Version Selection**:
     - **Standard Edition (Dockerfile.dev)**: Integrated with Go 1.26, Node 22 LTS, Python 3.13, pnpm, Bun, Playwright, etc.
-    - **Java Enhanced Edition (Dockerfile.java)**: Deeply integrated with **JDK 25 (LTS)**, Google Java Format, Checkstyle, architectural checks, and other enterprise-grade tools on top of the standard edition.
+    - **Office Edition (Pro)**: Specialized for **non-developers**. Includes enhanced OCR, PDF tools, and UI automation.
+    - **Java Enhanced Edition (Dockerfile.java)**: Deeply integrated with **JDK 25 (LTS)** and enterprise-grade tools.
 - 🧠 **AI-Native Integration**: Built-in **Claude Code**, **OpenCode**, and **Pi-Mono**, allowing AI to write and run code directly within the container for you.
 - 🌐 **Global Acceleration**: Intelligent proxy forwarding mechanism specifically optimized for Google and Claude APIs.
 - 🎥 **Automation Capabilities**: Pre-installed Playwright and all browser dependencies, supporting complex web automation tasks.
@@ -50,8 +51,14 @@ cp .env.example .env
 make update
 
 # 3. Initialize Docker development image
-# This step handles permission fixes, dependency checks, and image building
+# Default Standard Edition
 make install
+
+# For Office Automation (Pro Edition)
+make install office
+
+# For Java Enhanced Edition
+make install java
 ```
 
 ### 3. Start & Verify
@@ -68,14 +75,8 @@ make test-proxy
 - **Web Console**: [http://127.0.0.1:18789](http://127.0.0.1:18789)
 - **Debug Logs**: `make logs`
 
-### 💡 How to Switch to Java Enhanced Edition
-If you need Java development capabilities, you can switch environments with one command:
-```bash
-# Automatically build the Java image and restart services
-make rebuild-java
-```
-Or switch manually via environment variables:
-1. Modify `.env` file: `OPENCLAW_IMAGE=openclaw:dev-java`
+ Or switch manually via environment variables:
+1. Modify `.env` file: `OPENCLAW_IMAGE=openclaw:pro` (or `openclaw:dev-java`)
 2. Run `make up`
 
 ---

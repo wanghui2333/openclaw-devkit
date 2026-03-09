@@ -11,13 +11,16 @@ This manual provides in-depth technical details of the OpenClaw DevKit, suppleme
 | **Lifecycle**       | `make up`             | Start all dev containers (detached)                            |
 |                     | `make down`           | Stop and remove all containers                                 |
 |                     | `make install`        | **Standard** initialization (env check, permissions, build)    |
+|                     | `make install office` | **Office Pro** initialization                                  |
 |                     | `make install java`   | **Java Enhanced** initialization                               |
 |                     | `make restart`        | Restart all services                                           |
 |                     | `make status`         | View container health, image versions, and access URLs         |
 | **Build & Update**  | `make build`          | Manually build the standard image                              |
 |                     | `make build-java`     | Manually build the Java enhanced image                         |
+|                     | `make build-office`   | Manually build the Office Pro image                            |
 |                     | `make rebuild`        | Rebuild standard image + restart services                      |
 |                     | `make rebuild-java`   | Rebuild Java image + restart services                          |
+|                     | `make rebuild-office` | Rebuild Office Pro image + restart services                    |
 |                     | `make update`         | Automatically fetch latest source from GitHub Releases         |
 | **Diagnosis**       | `make logs`           | Follow Gateway service logs                                    |
 |                     | `make logs-all`       | Follow all container logs                                      |

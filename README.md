@@ -24,6 +24,7 @@
 - 📦 **一键就绪**：基于 Docker Compose，屏蔽繁琐的底层依赖安装，秒级进入开发状态。
 - 🔧 **双重马力**：
     - **Standard (标准版)**：极致轻量，集成 Go、Node、Python 及主流 AI 编码工具。
+    - **Office (Pro 办公版)**：专为**文字工作者**设计，强化 OCR、PDF 处理与 UI 自动化，移除开发密集型工具。
     - **Java Enhanced (Java 增强版)**：专为企业级应用设计，深度集成 JDK 25 及整套质量审计工具链。
 - 🧠 **AI 原生集成**：内置 **Claude Code**, **OpenCode** 与 **Pi-Mono**，让 AI 直接在容器内为您编写和运行代码。
 - 🌐 **跨境加速**：智能代理转发机制，针对 Google/Claude API 进行了专门优化。
@@ -33,17 +34,16 @@
 
 ## 📊 版本能力对比
 
-| 特性             |       Standard (标准版)        |     Java Enhanced (增强版)      |
-| :--------------- | :----------------------------: | :-----------------------------: |
-| **基础语言**     | Node 22, Go 1.26, Python 3.13  |             ✅ 同左              |
-| **包管理器**     |         pnpm, Bun, pip         |             ✅ 同左              |
-| **AI 助手**      | Claude Code, OpenCode, Pi-Mono |             ✅ 同左              |
-| **浏览器自动化** |     Playwright + Chromium      |             ✅ 同左              |
-| **文档处理**     |         Pandoc + LaTeX         |             ✅ 同左              |
-| **Java 核心**    |               ❌                |        **JDK 25 (LTS)**         |
-| **工程工具**     |               ❌                |    Gradle, Maven, Spring CLI    |
-| **静态分析**     |               ❌                |    PMD, Checkstyle, SpotBugs    |
-| **架构治理**     |               ❌                | ArchUnit (通过 Java 工具链支持) |
+| 特性              |   Standard (标准版)    |      Office (Pro 办公版)       |  Java Enhanced (增强版)   |
+| :---------------- | :--------------------: | :----------------------------: | :-----------------------: |
+| **基础语言**      | Node 22, Go, Python 13 |   ✅ 同左 (Go 仅含运行时环境)   |          ✅ 同左           |
+| **AI 助手**       | Claude Code, OpenCode  |             ✅ 同左             |          ✅ 同左           |
+| **浏览器自动化**  | Playwright + Chromium  |             ✅ 同左             |          ✅ 同左           |
+| **文档处理**      |     Pandoc + LaTeX     |             ✅ 同左             |          ✅ 同左           |
+| **OCR 识别**      |           ❌            |       **Tesseract-OCR**        |             ❌             |
+| **图像/PDF 处理** |           ❌            | **ImageMagick, Poppler-utils** |             ❌             |
+| **Java 核心**     |           ❌            |               ❌                |     **JDK 25 (LTS)**      |
+| **工程工具**      |           ❌            |               ❌                | Gradle, Maven, Spring CLI |
 
 ---
 
@@ -64,6 +64,9 @@ make update             # 同步核心源码 (首次必做)
 ```bash
 # 构建并启动标准版 (推荐)
 make install
+
+# 构建 Office 办公/自动化版
+make install office
 
 # 或者构建 Java 增强版
 make install java

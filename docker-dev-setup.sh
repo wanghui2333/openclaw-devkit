@@ -371,6 +371,8 @@ fi
 DOCKERFILE_PATH="$ROOT_DIR/Dockerfile.dev"
 if [[ "$IMAGE_NAME" == *"-java"* ]]; then
   DOCKERFILE_PATH="$ROOT_DIR/Dockerfile.java"
+elif [[ "$IMAGE_NAME" == *"pro"* ]]; then
+  DOCKERFILE_PATH="$ROOT_DIR/Dockerfile.office"
 fi
 
 docker build \
@@ -518,9 +520,11 @@ Gateway Token:
 
 包含的开发工具:
   ✓ Node.js 22 + pnpm + Bun
-  ✓ Python 3 + pip (含 python-docx, openpyxl, python-pptx)
-  ✓ Go (golang-go)
+  ✓ Python 3 + pip (含 python-docx, openpyxl, python-pptx, pytesseract, pdf2image)
+  ✓ Go (golang-go) [仅限标准版与 Java 版]
+  ✓ JDK 25 [仅限 Java 版]
   ✓ Chromium/Playwright (浏览器自动化)
   ✓ Pandoc + LaTeX (文档处理)
+  ✓ OCR & ImageMagick [仅限 Office 版]
   ✓ ripgrep, jq, fd-find, bat, httpie 等现代 CLI 工具
 END

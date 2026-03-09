@@ -47,7 +47,7 @@ help: ## 显示帮助信息
 	@grep -h -E '^(install|up|down|status):.*## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "│  \033[36m%-18s\033[0m %s │\n", $$1, $$2}'
 	@echo "├─ 构建与清理 ───────────────────────────────────────────────┤"
-	@grep -h -E '^(build|build-java|rebuild|rebuild-java|clean):.*## .*$$' $(MAKEFILE_LIST) | \
+	@grep -h -E '^(build|build-java|build-office|rebuild|rebuild-java|rebuild-office|clean):.*## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "│  \033[36m%-18s\033[0m %s │\n", $$1, $$2}'
 	@echo "├─ 调试与诊断 ───────────────────────────────────────────────┤"
 	@grep -h -E '^(logs|shell|exec|cli|pairing|gateway-health|test-proxy):.*## .*$$' $(MAKEFILE_LIST) | \
@@ -75,12 +75,17 @@ install: ## 首次安装/初始化环境 (支持: make install java)
 	@chmod +x $(SETUP_SCRIPT)
 	@if [ "$(filter java,$(MAKECMDGOALS))" = "java" ]; then \
 		OPENCLAW_IMAGE=openclaw:dev-java ./$(SETUP_SCRIPT); \
+	elif [ "$(filter office,$(MAKECMDGOALS))" = "office" ]; then \
+		OPENCLAW_IMAGE=openclaw:pro ./$(SETUP_SCRIPT); \
 	else \
 		./$(SETUP_SCRIPT); \
 	fi
 
 # 伪目标，用于支持 make install java 这种写法
 java:
+	@:
+
+office:
 	@:
 
 up: ## 启动服务
@@ -136,6 +141,15 @@ build-java: ## 构建 Java 增强版镜像 (Dockerfile.java)
 		--build-arg HTTPS_PROXY=$(HTTPS_PROXY) \
 		.openclaw_src
 
+build-office: ## 构建 Office 办公/自动化版镜像 (Dockerfile.office)
+	@echo "==> 构建 openclaw:pro (Office 增强版)..."
+	docker build \
+		-t openclaw:pro \
+		-f Dockerfile.office \
+		--build-arg HTTP_PROXY=$(HTTP_PROXY) \
+		--build-arg HTTPS_PROXY=$(HTTPS_PROXY) \
+		.openclaw_src
+
 rebuild: ## 重建镜像并重启服务 (标准版)
 	@echo "==> 重建镜像并重启服务 (标准版)..."
 	$(MAKE) build
@@ -147,6 +161,12 @@ rebuild-java: ## 重建镜像并重启服务 (Java 增强版)
 	$(MAKE) build-java
 	$(MAKE) down
 	OPENCLAW_IMAGE=openclaw:dev-java $(MAKE) up
+
+rebuild-office: ## 重建镜像并重启服务 (Office 增强版)
+	@echo "==> 重建镜像并重启服务 (Office 增强版)..."
+	$(MAKE) build-office
+	$(MAKE) down
+	OPENCLAW_IMAGE=openclaw:pro $(MAKE) up
 
 clean: ## 清理容器和悬空镜像
 	@echo "==> 清理 Docker 资源..."

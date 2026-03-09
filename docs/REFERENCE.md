@@ -11,13 +11,16 @@
 | **生命周期**   | `make up`             | 启动所有开发容器 (后台运行)                       |
 |                | `make down`           | 停止并移除所有容器                                |
 |                | `make install`        | **标准版**初始化 (检查环境、修复权限、构建)       |
+|                | `make install office` | **Office 办公版**初始化                           |
 |                | `make install java`   | **Java 增强版**初始化                             |
 |                | `make restart`        | 重新启动所有服务                                  |
 |                | `make status`         | 查看容器健康状态、镜像版本与访问地址              |
 | **构建与更新** | `make build`          | 手动构建标准版镜像                                |
 |                | `make build-java`     | 手动构建 Java 增强版镜像                          |
+|                | `make build-office`   | 手动构建 Office 办公版镜像                        |
 |                | `make rebuild`        | 重建标准镜像 + 重启服务                           |
 |                | `make rebuild-java`   | 重建 Java 镜像 + 重启服务                         |
+|                | `make rebuild-office` | 重建 Office 镜像 + 重启服务                       |
 |                | `make update`         | 从 GitHub Release 自动化拉取最新源码              |
 | **调试与诊断** | `make logs`           | 追踪 Gateway 主服务日志                           |
 |                | `make logs-all`       | 追踪所有容器的日志                                |
