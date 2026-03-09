@@ -148,84 +148,61 @@ RUN mkdir -p "${GOPATH}/bin" && \
 # SDKMAN 安装 (Java SDK 版本管理器)
 # https://sdkman.io/
 ENV SDKMAN_DIR=/home/node/.sdkman
-RUN curl -fsSL "https://get.sdkman.io" | bash && \
-  chown -R node:node /home/node/.sdkman
+RUN curl -fsSL "https://get.sdkman.io" | bash
 
-# JDK 25 LTS 安装 (2026 最新 LTS 版本)
-# https://sdkman.io/jdks
+# JDK 25 LTS, Gradle, Maven 安装
+# 2026 Java 开发最佳实践: 使用 Eclipse Temurin (tem) 并清理缓存
 ARG JDK_VERSION=25
-ARG JDK_VENDOR=tempo
-ENV JAVA_HOME=/home/node/.sdkman/candidates/java/current
-ENV PATH="${JAVA_HOME}/bin:${PATH}"
+ARG JDK_VENDOR=tem
+ARG GRADLE_VERSION=8.14
+ARG MAVEN_VERSION=3.9.9
 
 RUN bash -c "source ${SDKMAN_DIR}/bin/sdkman-init.sh && \
   sdk install java ${JDK_VERSION}-${JDK_VENDOR} && \
-  sdk default java ${JDK_VERSION}-${JDK_VENDOR}"
-
-# Gradle 安装 (推荐构建工具 - 增量构建更快)
-ARG GRADLE_VERSION=8.14
-RUN bash -c "source ${SDKMAN_DIR}/bin/sdkman-init.sh && \
   sdk install gradle ${GRADLE_VERSION} && \
-  sdk default gradle ${GRADLE_VERSION}"
-
-# Maven 安装 (传统项目兼容)
-ARG MAVEN_VERSION=3.9.9
-RUN bash -c "source ${SDKMAN_DIR}/bin/sdkman-init.sh && \
   sdk install maven ${MAVEN_VERSION} && \
-  sdk default maven ${MAVEN_VERSION}"
+  sdk flush archives && \
+  sdk flush temp"
 
-# 创建 Java 工具目录
-RUN mkdir -p /home/node/.local/bin /home/node/.local/lib && \
-  chown -R node:node /home/node/.local
+ENV JAVA_HOME=${SDKMAN_DIR}/candidates/java/current
+ENV PATH="${JAVA_HOME}/bin:${SDKMAN_DIR}/candidates/gradle/current/bin:${SDKMAN_DIR}/candidates/maven/current/bin:${PATH}"
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0 -Dfile.encoding=UTF-8"
 
-# Spring Boot CLI (https://spring.io/tools)
+
+# 安装 Java 开发工具 (Spring Boot, Formatter, Linter, etc.)
 ARG SPRING_BOOT_VERSION=3.4.4
-RUN curl -fsSL "https://repo.spring.io/release/org/springframework/boot/spring-boot-cli/${SPRING_BOOT_VERSION}/spring-boot-cli-${SPRING_BOOT_VERSION}-bin.tar.gz" | \
+ARG GOOGLE_JAVA_FORMAT_VERSION=1.27.0
+ARG CHECKSTYLE_VERSION=10.23.1
+ARG PMD_VERSION=7.12.0
+ARG SPOTBUGS_VERSION=4.9.3
+
+RUN mkdir -p /home/node/.local/bin /home/node/.local/lib && \
+  # Spring Boot CLI
+  curl -fsSL "https://repo.spring.io/release/org/springframework/boot/spring-boot-cli/${SPRING_BOOT_VERSION}/spring-boot-cli-${SPRING_BOOT_VERSION}-bin.tar.gz" | \
   tar -xz -C /home/node/.local && \
   ln -sf /home/node/.local/spring-${SPRING_BOOT_VERSION}/bin/spring /home/node/.local/bin/spring && \
-  chown -R node:node /home/node/.local/spring-${SPRING_BOOT_VERSION}
-ENV PATH="/home/node/.local/spring-${SPRING_BOOT_VERSION}/bin:${PATH}"
-
-# google-java-format (代码格式化 CLI)
-# https://github.com/google/google-java-format
-ARG GOOGLE_JAVA_FORMAT_VERSION=1.27.0
-RUN curl -fsSL "https://github.com/google/google-java-format/releases/download/v${GOOGLE_JAVA_FORMAT_VERSION}/google-java-format-${GOOGLE_JAVA_FORMAT_VERSION}-all-deps.jar" \
+  # Google Java Format
+  curl -fsSL "https://github.com/google/google-java-format/releases/download/v${GOOGLE_JAVA_FORMAT_VERSION}/google-java-format-${GOOGLE_JAVA_FORMAT_VERSION}-all-deps.jar" \
   -o /home/node/.local/lib/google-java-format.jar && \
-  echo '#!/bin/bash\njava -jar /home/node/.local/lib/google-java-format.jar "$@"' > /home/node/.local/bin/google-java-format && \
-  chmod +x /home/node/.local/bin/google-java-format && \
-  chown node:node /home/node/.local/lib/google-java-format.jar
-
-# Checkstyle (代码风格检查 CLI)
-# https://checkstyle.sourceforge.io/
-ARG CHECKSTYLE_VERSION=10.23.1
-RUN curl -fsSL "https://github.com/checkstyle/checkstyle/releases/download/checkstyle-${CHECKSTYLE_VERSION}/checkstyle-${CHECKSTYLE_VERSION}-all.jar" \
+  printf '#!/bin/bash\njava -jar /home/node/.local/lib/google-java-format.jar "$@"' > /home/node/.local/bin/google-java-format && \
+  # Checkstyle
+  curl -fsSL "https://github.com/checkstyle/checkstyle/releases/download/checkstyle-${CHECKSTYLE_VERSION}/checkstyle-${CHECKSTYLE_VERSION}-all.jar" \
   -o /home/node/.local/lib/checkstyle.jar && \
-  echo '#!/bin/bash\njava -jar /home/node/.local/lib/checkstyle.jar "$@"' > /home/node/.local/bin/checkstyle && \
-  chmod +x /home/node/.local/bin/checkstyle && \
-  chown node:node /home/node/.local/lib/checkstyle.jar
-
-# PMD (代码质量分析 CLI)
-# https://pmd.github.io/
-ARG PMD_VERSION=7.12.0
-RUN curl -fsSL "https://github.com/pmd/pmd/releases/download/pmd_releases%2F${PMD_VERSION}/pmd-dist-${PMD_VERSION}-bin.zip" \
-  -o /tmp/pmd.zip && \
-  unzip /tmp/pmd.zip -d /home/node/.local && \
-  rm /tmp/pmd.zip && \
+  printf '#!/bin/bash\njava -jar /home/node/.local/lib/checkstyle.jar "$@"' > /home/node/.local/bin/checkstyle && \
+  # PMD
+  curl -fsSL "https://github.com/pmd/pmd/releases/download/pmd_releases%%2F${PMD_VERSION}/pmd-dist-${PMD_VERSION}-bin.zip" -o /tmp/pmd.zip && \
+  unzip /tmp/pmd.zip -d /home/node/.local && rm /tmp/pmd.zip && \
   ln -sf /home/node/.local/pmd-bin-${PMD_VERSION}/bin/pmd /home/node/.local/bin/pmd && \
-  chown -R node:node /home/node/.local/pmd-bin-${PMD_VERSION}
-ENV PATH="/home/node/.local/pmd-bin-${PMD_VERSION}/bin:${PATH}"
-
-# SpotBugs (Bug 检测 CLI)
-# https://spotbugs.github.io/
-ARG SPOTBUGS_VERSION=4.9.3
-RUN curl -fsSL "https://github.com/spotbugs/spotbugs/releases/download/${SPOTBUGS_VERSION}/spotbugs-${SPOTBUGS_VERSION}.tgz" | \
+  # SpotBugs
+  curl -fsSL "https://github.com/spotbugs/spotbugs/releases/download/${SPOTBUGS_VERSION}/spotbugs-${SPOTBUGS_VERSION}.tgz" | \
   tar -xz -C /home/node/.local && \
   ln -sf /home/node/.local/spotbugs-${SPOTBUGS_VERSION}/bin/spotbugs /home/node/.local/bin/spotbugs && \
-  chown -R node:node /home/node/.local/spotbugs-${SPOTBUGS_VERSION}
-ENV PATH="/home/node/.local/spotbugs-${SPOTBUGS_VERSION}/bin:${PATH}"
+  # 修改权限
+  chmod +x /home/node/.local/bin/* && \
+  chown -R node:node /home/node/.local /home/node/.sdkman
 
-# 更新 PATH
-ENV PATH="/home/node/.local/bin:/home/node/.sdkman/candidates/java/current/bin:/home/node/.sdkman/candidates/gradle/current/bin:/home/node/.sdkman/candidates/maven/current/bin:${PATH}"
+ENV PATH="/home/node/.local/bin:${PATH}"
+
 
 # ============================================================
 # 第三阶段：安装 OpenClaw 核心组件
