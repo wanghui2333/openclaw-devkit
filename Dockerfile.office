@@ -32,10 +32,10 @@ ENV https_proxy=$HTTPS_PROXY
 # 安装构建依赖
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -o Acquire::Retries=3 \
-    curl wget jq git ripgrep fd-find build-essential pkg-config ca-certificates && \
+    curl wget jq git ripgrep fd-find build-essential pkg-config ca-certificates unzip && \
     apt-get clean && rm -rf /var/lib/apt/lists/* || \
     (apt-get update --fix-missing && DEBIAN_FRONTEND=noninteractive apt-get install -y --fix-missing --no-install-recommends -o Acquire::Retries=5 \
-    curl wget jq git ripgrep fd-find build-essential pkg-config ca-certificates)
+    curl wget jq git ripgrep fd-find build-essential pkg-config ca-certificates unzip)
 
 # 安装 Bun (官方推荐方式)
 RUN curl -fsSL https://bun.sh/install | bash
@@ -100,6 +100,9 @@ RUN apt-get update && \
 # 安装 pnpm (使用 corepack)
 RUN corepack enable && corepack prepare pnpm@* --activate
 
+# 安装 Playwright CLI (用于调试和自动化录制)
+RUN npm install -g @playwright/test@latest
+
 # 安装 Bun 运行时
 COPY --from=builder /root/.bun /root/.bun
 ENV BUN_INSTALL=/root/.bun
@@ -153,17 +156,14 @@ COPY --from=builder --chown=node:node /app/docs ./docs
 # 改变目录 owner
 RUN chown -R node:node /app
 
-# 安装 Chromium (可选, 官方推荐参数化)
-ARG OPENCLAW_INSTALL_BROWSER=""
-RUN if [ -n "$OPENCLAW_INSTALL_BROWSER" ]; then \
-    apt-get update && \
+# 安装 Chromium (Office 版必装)
+RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends xvfb && \
     mkdir -p /home/node/.cache/ms-playwright && \
     PLAYWRIGHT_BROWSERS_PATH=/home/node/.cache/ms-playwright \
     node /app/node_modules/playwright-core/cli.js install --with-deps chromium && \
     chown -R node:node /home/node/.cache/ms-playwright && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*; \
-    fi
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 规范化扩展权限 (官方推荐)
 RUN for dir in /app/extensions /app/.agent /app/.agents; do \

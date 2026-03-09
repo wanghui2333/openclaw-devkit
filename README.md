@@ -5,12 +5,9 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Maintained%3F-yes-green.svg" alt="Maintained">
-  <a href="https://github.com/openclaw/openclaw"><img src="https://img.shields.io/badge/Powered%20By-OpenClaw-blue?style=flat-square" alt="OpenClaw"></a>
-  <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Env-Docker-blue?logo=docker&style=flat-square" alt="Docker"></a>
-  <a href="https://claude.ai/code"><img src="https://img.shields.io/badge/With-Claude%20Code-purple?style=flat-square" alt="Claude Code"></a>
-  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square" alt="PRs Welcome">
-  <img src="https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square" alt="License">
+  <a href="https://github.com/openclaw/openclaw"><img src="https://img.shields.io/badge/Powered%20By-OpenClaw-blue" alt="OpenClaw"></a>
+  <a href="https://www.docker.com/"><img src="https://img.shields.io/badge/Env-Docker-blue?logo=docker" alt="Docker"></a>
+  <a href="https://claude.ai/code"><img src="https://img.shields.io/badge/With-Claude%20Code-purple" alt="Claude Code"></a>
 </p>
 
 ---
@@ -29,21 +26,6 @@
 - 🧠 **AI 原生集成**：内置 **Claude Code**, **OpenCode** 与 **Pi-Mono**，让 AI 直接在容器内为您编写和运行代码。
 - 🌐 **跨境加速**：智能代理转发机制，针对 Google/Claude API 进行了专门优化。
 - 💾 **数据持久化**：采用 **Named Volumes**，实现极速构建缓存与会话持久化。
-
----
-
-## 📊 版本能力对比
-
-| 特性              |   Standard (标准版)    |      Office (Pro 办公版)       |  Java Enhanced (增强版)   |
-| :---------------- | :--------------------: | :----------------------------: | :-----------------------: |
-| **基础语言**      | Node 22, Go, Python 13 |   ✅ 同左 (Go 仅含运行时环境)   |          ✅ 同左           |
-| **AI 助手**       | Claude Code, OpenCode  |             ✅ 同左             |          ✅ 同左           |
-| **浏览器自动化**  | Playwright + Chromium  |             ✅ 同左             |          ✅ 同左           |
-| **文档处理**      |     Pandoc + LaTeX     |             ✅ 同左             |          ✅ 同左           |
-| **OCR 识别**      |           ❌            |       **Tesseract-OCR**        |             ❌             |
-| **图像/PDF 处理** |           ❌            | **ImageMagick, Poppler-utils** |             ❌             |
-| **Java 核心**     |           ❌            |               ❌                |     **JDK 25 (LTS)**      |
-| **工程工具**      |           ❌            |               ❌                | Gradle, Maven, Spring CLI |
 
 ---
 
@@ -76,6 +58,24 @@ make install java
 - **Web UI**: [http://127.0.0.1:18789](http://127.0.0.1:18789)
 - **连通性测试**: `make test-proxy`
 - **实时日志**: `make logs`
+
+---
+
+## 📊 版本能力对比
+
+| 特性          | Standard (标准版) | Java Enhanced (增强版) |  Office (Pro 办公版)  |
+| :------------ | :---------------: | :--------------------: | :-------------------: |
+| 适用人群      |     全栈开发      |    Java 企业级开发     |   文案与办公自动化    |
+| 核心环境      | Node, Go, Python  |     同左 + JDK 25      |    Node 22, Python    |
+| AI 助手       |    ✅ 完整内置     |       ✅ 完整内置       |      ✅ 完整内置       |
+| 网页自动化    |    Playwright     |       Playwright       | Playwright + Selenium |
+| 文档转换      |   Pandoc, LaTeX   |     Pandoc, LaTeX      | Pandoc, LaTeX (Full)  |
+| OCR 识别      |         ❌         |           ❌            | Tesseract-OCR (中/英) |
+| 图像/PDF 处理 |         ❌         |           ❌            | ImageMagick, Poppler  |
+| 数据分析      |         ❌         |           ❌            |     Pandas, Numpy     |
+| 工程工具      |     pnpm, Bun     |     Gradle, Maven      |       pnpm, Bun       |
+| 环境特点      |   轻量、聚焦 AI   |    深度集成审计工具    |  零门槛、全集成办公   |
+| 镜像大小      |      ~6.4GB       |         ~8.1GB         |     ~5.8GB (Slim)     |
 
 ---
 
