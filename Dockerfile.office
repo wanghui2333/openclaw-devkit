@@ -8,13 +8,14 @@ ARG BUN_VERSION=1.2.19
 ARG PYTHON_PACKAGES="python-pptx openpyxl python-docx beautifulsoup4 lxml pyyaml pytesseract pdf2image pillow pandas numpy requests aiohttp xlwings pypdf pymupdf reportlab docx2txt python-dateutil pytz selenium webdriver-manager"
 
 # OpenClaw Office 镜像 - 办公自动化增强版
-# 基于 OpenClaw 官方 Dockerfile 最佳实践
+# 基于 debian:stable-slim
 #
 # 与标准版的区别:
-# - 使用 node:22-bookworm-slim 基础镜像 (官方推荐)
-# - 添加完整的办公自动化 Python 工具链
-# - 添加中文字体和 OCR 支持
+# - 添加完整的办公自动化 Python 工具链 (python-pptx, openpyxl, python-docx 等)
+# - 添加中文字体和 OCR 支持 (tesseract-ocr, fonts-wqy-zenhei)
+# - 添加 PDF 处理工具 (poppler-utils, ghostscript, pypdf, pymupdf)
 # - 移除 Go 编译器 (节省空间)
+# - 无需浏览器自动化 (可选)
 #
 # 构建命令:
 #   docker build -t openclaw:office -f Dockerfile.office .
@@ -22,7 +23,7 @@ ARG PYTHON_PACKAGES="python-pptx openpyxl python-docx beautifulsoup4 lxml pyyaml
 # GitHub CI 优化版本 - 使用官方源，无代理依赖
 
 # ============================================================
-# 第一阶段：构建依赖 (builder)
+# 阶段 1：构建依赖 (builder) - 安装构建工具并构建应用
 # ============================================================
 FROM debian:stable-slim AS builder
 
@@ -79,7 +80,7 @@ ENV OPENCLAW_PREFER_PNPM=1
 RUN pnpm ui:build
 
 # ============================================================
-# 第二阶段：运行时基础镜像 (base)
+# 阶段 2：运行时基础镜像 (base) - 安装运行时依赖和办公工具
 # ============================================================
 FROM debian:stable-slim AS base
 
@@ -135,7 +136,7 @@ RUN ARCH=$(dpkg --print-architecture) && \
 RUN pip3 install --break-system-packages --no-cache-dir $PYTHON_PACKAGES
 
 # ============================================================
-# 第三阶段：最终镜像 (runtime)
+# 阶段 3：最终镜像 (runtime) - 复制构建产物
 # ============================================================
 FROM base AS runtime
 

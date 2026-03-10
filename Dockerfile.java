@@ -20,8 +20,11 @@ ARG PMD_VERSION=7.12.0
 ARG SPOTBUGS_VERSION=4.9.3
 
 # OpenClaw 开发环境定制镜像 (Java 增强版)
-# 基于 Dockerfile.dev，增加 Java/JVM 技术栈开发工具
-# 集成多语言开发栈: TypeScript (主) + Go + Python + Java
+# 基于 debian:stable-slim，集成多语言开发栈
+#
+# 包含工具链: Node.js 22, Go 1.26, Java 25, Python 3, Bun, pnpm
+# 额外集成: JDK 25, Gradle 8.14, Maven 3.9.9, Spring Boot CLI
+# 开发工具: Playwright, Claude Code, OpenCode, golangci-lint
 #
 # 构建命令:
 #   docker build -t openclaw:dev-java -f Dockerfile.java .
@@ -29,11 +32,11 @@ ARG SPOTBUGS_VERSION=4.9.3
 # GitHub CI 优化版本 - 使用官方源，无代理依赖
 
 # ============================================================
-# 第一阶段：构建依赖 (builder)
+# 阶段 1：构建依赖 (builder) - 安装所有开发工具
 # ============================================================
 FROM debian:stable-slim AS builder
 
-LABEL org.opencontainers.image.base.name="docker.io/library/node:22-bookworm-slim" \
+LABEL org.opencontainers.image.base.name="docker.io/library/debian:stable-slim" \
   org.opencontainers.image.source="https://github.com/openclaw/openclaw" \
   org.opencontainers.image.title="OpenClaw Dev (2025 Java Enhanced)" \
   org.opencontainers.image.description="OpenClaw gateway with 2025 toolchain (Node 22 LTS, Go 1.26, Python 3.13, Java 25)"
@@ -81,7 +84,7 @@ RUN ARCH=$(dpkg --print-architecture) && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # ============================================================
-# 第二阶段：安装语言运行时和包管理器
+# 阶段 1 (续): 安装语言运行时和包管理器
 # ============================================================
 
 # Bun (TypeScript 运行时)
@@ -191,7 +194,7 @@ RUN mkdir -p /root/.local/bin /root/.local/lib && \
 ENV PATH="/root/.local/bin:${PATH}"
 
 # ============================================================
-# 第三阶段：安装 OpenClaw 核心组件
+# 阶段 1 (续): 安装 OpenClaw 核心组件并构建
 # ============================================================
 WORKDIR /app
 
@@ -213,7 +216,7 @@ ENV OPENCLAW_PREFER_PNPM=1
 RUN pnpm ui:build
 
 # ============================================================
-# 第二阶段：运行时基础镜像 (base)
+# 阶段 2：运行时基础镜像 (base) - 仅安装运行时依赖
 # ============================================================
 FROM debian:stable-slim AS base
 
@@ -254,7 +257,7 @@ RUN ARCH=$(dpkg --print-architecture) && \
 RUN pip3 install --break-system-packages --no-cache-dir $PYTHON_PACKAGES
 
 # ============================================================
-# 第三阶段：最终镜像 (runtime)
+# 阶段 3：最终镜像 (runtime) - 复制构建产物
 # ============================================================
 FROM base AS runtime
 

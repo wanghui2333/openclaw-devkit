@@ -10,7 +10,10 @@ ARG PYTHON_PACKAGES="python-pptx openpyxl python-docx beautifulsoup4 lxml pyyaml
 ARG INSTALL_BROWSER=1
 
 # OpenClaw 开发环境定制镜像 (标准开发版)
-# 基于官方 debian:latest 基础镜像，集成多语言开发栈
+# 基于 debian:stable-slim，集成多语言开发栈
+#
+# 包含工具链: Node.js 22, Go 1.26, Python 3, Bun, pnpm
+# 集成开发工具: Playwright, Claude Code, OpenCode
 #
 # 构建命令:
 #   docker build -t openclaw:dev -f Dockerfile .
@@ -18,7 +21,7 @@ ARG INSTALL_BROWSER=1
 # GitHub CI 优化版本 - 使用官方源，无代理依赖
 
 # ============================================================
-# 第一阶段：构建依赖 (builder)
+# 阶段 1：构建依赖 (builder) - 安装所有开发工具
 # ============================================================
 FROM debian:stable-slim AS builder
 
@@ -87,7 +90,7 @@ RUN ARCH=$(dpkg --print-architecture) && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # ============================================================
-# 第二阶段：安装语言运行时和包管理器
+# 阶段 1 (续): 安装语言运行时和包管理器
 # ============================================================
 
 # Bun (TypeScript 运行时)
@@ -150,7 +153,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     done
 
 # ============================================================
-# 第三阶段：安装 OpenClaw 核心组件
+# 阶段 1 (续): 安装 OpenClaw 核心组件并构建
 # ============================================================
 WORKDIR /app
 
@@ -172,7 +175,7 @@ ENV OPENCLAW_PREFER_PNPM=1
 RUN pnpm ui:build
 
 # ============================================================
-# 第二阶段：运行时基础镜像 (base)
+# 阶段 2：运行时基础镜像 (base) - 仅安装运行时依赖
 # ============================================================
 FROM debian:stable-slim AS base
 
@@ -225,7 +228,7 @@ RUN ARCH=$(dpkg --print-architecture) && \
 RUN pip3 install --break-system-packages --no-cache-dir $PYTHON_PACKAGES
 
 # ============================================================
-# 第三阶段：最终镜像 (runtime)
+# 阶段 3：最终镜像 (runtime) - 复制构建产物
 # ============================================================
 FROM base AS runtime
 
