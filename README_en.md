@@ -81,6 +81,25 @@ make test-proxy
 
 ---
 
+### Interactive Setup (onboard)
+
+First-time setup requires running the interactive wizard to configure LLM providers, Feishu, channels, and other core settings:
+
+```bash
+# Launch interactive setup wizard
+make onboard
+```
+
+This wizard will guide you through:
+- 🤖 **LLM Configuration**: Select and configure Claude/OpenAI/Qwen models
+- 📱 **Feishu Integration**: Configure Feishu bot permissions and channels
+- 📢 **Notification Channels**: Set up message delivery methods and recipients
+
+> [!TIP]
+> If you're using a prebuilt image, configuration data persists in the `openclaw-state` volume—no need to reconfigure after container restarts.
+
+---
+
 > [!WARNING]
 > ## ⚠️ Important Security Warning: Do NOT Mix Container & Host Installation
 >
@@ -204,6 +223,7 @@ Edit the `.env` file in the project root for personalized configuration:
 | Category         | Command               | Description                                                 |
 | :--------------- | :-------------------- | :---------------------------------------------------------- |
 | **Lifecycle**    | `make up / down`      | Start / Stop services                                       |
+|                  | `make onboard`        | Interactive setup wizard (LLM, Feishu, channels, etc.)       |
 |                  | `make restart`        | Restart all services                                        |
 |                  | `make status`         | View container status and access URLs                       |
 | **Build/Update** | `make build`          | Build standard image (Dockerfile)                           |
