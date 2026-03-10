@@ -65,6 +65,7 @@ jobs:
           cp Dockerfile .openclaw_src/Dockerfile
           cp Dockerfile.java .openclaw_src/Dockerfile.java
           cp Dockerfile.office .openclaw_src/Dockerfile.office
+          cp docker-entrypoint.sh .openclaw_src/docker-entrypoint.sh
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
