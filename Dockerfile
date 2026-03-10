@@ -3,17 +3,14 @@
 # ============================================================
 # 全局构建参数 (跨所有阶段)
 # ============================================================
-ARG BUN_VERSION=1.3.10
+ARG BUN_VERSION=1.2.19
 ARG GO_VERSION=1.26.1
 ARG GOLANGCI_LINT_VERSION=1.64.8
 ARG PYTHON_PACKAGES="python-pptx openpyxl python-docx beautifulsoup4 lxml pyyaml pandoc"
 ARG INSTALL_BROWSER=1
 
 # OpenClaw 开发环境定制镜像 (标准开发版)
-# 基于 debian:stable-slim，集成多语言开发栈
-#
-# 包含工具链: Node.js 22, Go 1.26, Python 3, Bun, pnpm
-# 集成开发工具: Playwright, Claude Code, OpenCode
+# 基于官方 node:22-bookworm 基础镜像，集成多语言开发栈
 #
 # 构建命令:
 #   docker build -t openclaw:dev -f Dockerfile .
@@ -21,21 +18,19 @@ ARG INSTALL_BROWSER=1
 # GitHub CI 优化版本 - 使用官方源，无代理依赖
 
 # ============================================================
-# 阶段 1：构建依赖 (builder) - 安装所有开发工具
+# 第一阶段：构建依赖 (builder)
 # ============================================================
-FROM debian:stable-slim AS builder
+FROM node:22-bookworm-slim@sha256:9c2c405e3ff9b9afb2873232d24bb06367d649aa3e6259cbe314da59578e81e9 AS builder
 
-# 定义所有构建参数 (确保每个阶段都能访问)
-ARG BUN_VERSION=1.3.10
-ARG GO_VERSION=1.26.1
-ARG GOLANGCI_LINT_VERSION=1.64.8
-ARG PYTHON_PACKAGES="python-pptx openpyxl python-docx beautifulsoup4 lxml pyyaml pandoc"
-ARG INSTALL_BROWSER=1
-
-LABEL org.opencontainers.image.base.name="docker.io/library/debian:stable-slim" \
+LABEL org.opencontainers.image.base.name="docker.io/library/node:22-bookworm-slim" \
   org.opencontainers.image.source="https://github.com/openclaw/openclaw" \
   org.opencontainers.image.title="OpenClaw Dev (2025 Standard)" \
   org.opencontainers.image.description="OpenClaw gateway with 2025 toolchain (Node 22 LTS, Go 1.26, Python 3.13)"
+ARG BUN_VERSION
+ARG GO_VERSION
+ARG GOLANGCI_LINT_VERSION
+ARG PYTHON_PACKAGES
+ARG INSTALL_BROWSER
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -56,18 +51,6 @@ RUN apt-get update && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ============================================================
-# Node.js 22 LTS via NodeSource
-# ============================================================
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl ca-certificates gnupg && \
-    mkdir -p /etc/apt/keyrings && \
-    curl -fsSL "https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key" | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" > /etc/apt/sources.list.d/nodesource.list && \
-    apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# ============================================================
 # Go 1.26 (Latest Stable 2025)
 # ============================================================
 RUN ARCH=$(dpkg --print-architecture) && \
@@ -82,7 +65,11 @@ ENV PATH="${GOPATH}/bin:${PATH}"
 # GitHub CLI 最新版
 # ============================================================
 RUN ARCH=$(dpkg --print-architecture) && \
-    GH_VERSION=$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest | jq -r '.tag_name' | sed 's/^v//') && \
+    echo "ARCH=${ARCH}" && \
+#    GH_VERSION=$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest | jq -r '.tag_name' | sed 's/^v//') && \
+    GH_VERSION=$(curl -fsSL -o /dev/null -w '%{url_effective}' \
+  https://github.com/cli/cli/releases/latest | sed 's|.*/||' | sed 's/^v//') && \
+    echo "GH_VERSION=${GH_VERSION}" && \
     curl -fsSL "https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${ARCH}.deb" -o /tmp/gh.deb && \
     apt-get update && apt-get install -y /tmp/gh.deb && \
     rm /tmp/gh.deb && \
@@ -90,7 +77,7 @@ RUN ARCH=$(dpkg --print-architecture) && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # ============================================================
-# 阶段 1 (续): 安装语言运行时和包管理器
+# 第二阶段：安装语言运行时和包管理器
 # ============================================================
 
 # Bun (TypeScript 运行时)
@@ -153,7 +140,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     done
 
 # ============================================================
-# 阶段 1 (续): 安装 OpenClaw 核心组件并构建
+# 第三阶段：安装 OpenClaw 核心组件
 # ============================================================
 WORKDIR /app
 
@@ -175,30 +162,21 @@ ENV OPENCLAW_PREFER_PNPM=1
 RUN pnpm ui:build
 
 # ============================================================
-# 阶段 2：运行时基础镜像 (base) - 仅安装运行时依赖
-# ============================================================
-FROM debian:stable-slim AS base
-
-ARG BUN_VERSION=1.3.10
-ARG PYTHON_PACKAGES="python-pptx openpyxl python-docx beautifulsoup4 lxml pyyaml pandoc"
+# 第二阶段：运行时基础镜像 (base===)
+# =========================================================
+FROM node:22-bookworm-slim@sha256:9c2c405e3ff9b9afb2873232d24bb06367d649aa3e6259cbe314da59578e81e9 AS base
+ARG BUN_VERSION
+ARG GO_VERSION
+ARG GOLANGCI_LINT_VERSION
+ARG PYTHON_PACKAGES
+ARG INSTALL_BROWSER
 
 ENV DEBIAN_FRONTEND=noninteractive
-
-# 安装基础工具 (curl, ca-certificates for HTTPS)
-RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl ca-certificates gnupg
-
-# 安装 Node.js 22.x via NodeSource (more reliable for multi-arch)
-RUN mkdir -p /etc/apt/keyrings && \
-    curl -fsSL "https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key" | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" > /etc/apt/sources.list.d/nodesource.list && \
-    apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
 
 # 安装运行时依赖
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -o Acquire::Retries=3 \
-    git openssl \
+    curl git openssl \
     # 文档处理
     pandoc texlive-latex-base texlive-fonts-recommended \
     # 浏览器自动化依赖
@@ -213,11 +191,15 @@ RUN apt-get update && \
 RUN npm install -g pnpm@latest
 
 # 安装 Bun 运行时
-RUN ARCH=$(dpkg --print-architecture) && \
+RUN echo "BUN_VERSION=${BUN_VERSION}" && \
+    echo "ARCH=$(dpkg --print-architecture)" && \
+    ARCH=$(dpkg --print-architecture) && \
     case "$ARCH" in \
-    aarch64|arm64) BUN_ARCH="aarch64" ;; \
-    x86_64|amd64) BUN_ARCH="x64" ;; \
+        aarch64|arm64) BUN_ARCH="aarch64" ;; \
+        x86_64|amd64) BUN_ARCH="x64" ;; \
+        *) echo "Unsupported arch: $ARCH"; exit 1 ;; \
     esac && \
+    echo "Final URL: https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-${BUN_ARCH}.zip" && \
     curl -fsSL "https://github.com/oven-sh/bun/releases/download/bun-v${BUN_VERSION}/bun-linux-${BUN_ARCH}.zip" -o /tmp/bun.zip && \
     unzip /tmp/bun.zip -d /tmp && \
     mv /tmp/bun-linux-${BUN_ARCH}/bun /usr/local/bin/bun && \
@@ -228,7 +210,7 @@ RUN ARCH=$(dpkg --print-architecture) && \
 RUN pip3 install --break-system-packages --no-cache-dir $PYTHON_PACKAGES
 
 # ============================================================
-# 阶段 3：最终镜像 (runtime) - 复制构建产物
+# 第三阶段：最终镜像 (runtime)
 # ============================================================
 FROM base AS runtime
 
@@ -247,7 +229,7 @@ COPY --from=builder --chown=node:node /app/skills ./skills
 COPY --from=builder --chown=node:node /app/docs ./docs
 
 # 改变目录 owner
-RUN chown -R node:node /app
+# RUN chown -R node:node /app
 
 # 安装 Chromium for Playwright (依赖已在 base 阶段安装)
 RUN if [ "${INSTALL_BROWSER}" = "1" ]; then \

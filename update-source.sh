@@ -35,12 +35,18 @@ trap cleanup EXIT INT TERM
 
 # 获取最新 release 版本
 get_latest_version() {
-  local version
-  version=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | jq -r '.tag_name')
-  if [[ -z "$version" ]]; then
-    error "无法获取最新版本信息"
+  local url="https://github.com/${REPO}/releases/latest"
+  local redirect
+  redirect=$(curl -fsSL -o /dev/null -w '%{url_effective}' "$url")
+
+  # 从 URL 中提取 tag，例如：https://github.com/openclaw/openclaw/releases/tag/v1.2.3
+  local tag=$(basename "$redirect")
+
+  if [[ -z "$tag" || "$tag" == "latest" ]]; then
+    error "无法从重定向 URL 提取版本号"
   fi
-  echo "$version"
+
+  echo "$tag"
 }
 
 # 下载源码
