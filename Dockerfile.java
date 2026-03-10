@@ -188,30 +188,35 @@ RUN wget -q https://archive.apache.org/dist/maven/maven-3/3.9.9/binaries/apache-
 ENV PATH="/usr/local/bin:${PATH}"
 
 # ============================================================
-# Java 开发工具 (Spring Boot, Formatter, Linter)
+# Java 开发工具 (可选) - 默认不安装以加快构建速度
+# 如需安装，设置 BUILD_JAVA_TOOLS=1
 # ============================================================
-RUN mkdir -p /root/.local/bin /root/.local/lib && \
+ARG BUILD_JAVA_TOOLS=0
+
+RUN if [ "${BUILD_JAVA_TOOLS}" = "1" ]; then \
+    mkdir -p /root/.local/bin /root/.local/lib && \
     # Spring Boot CLI
-    curl -fsSL "https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-cli/${SPRING_BOOT_VERSION}/spring-boot-cli-${SPRING_BOOT_VERSION}-bin.tar.gz" | \
+    curl -fsSL --retry 3 "https://repo1.maven.org/maven2/org/springframework/boot/spring-boot-cli/${SPRING_BOOT_VERSION}/spring-boot-cli-${SPRING_BOOT_VERSION}-bin.tar.gz" | \
     tar -xz -C /root/.local && \
     ln -sf /root/.local/spring-${SPRING_BOOT_VERSION}/bin/spring /root/.local/bin/spring && \
     # Google Java Format
-    curl -fsSL "https://github.com/google/google-java-format/releases/download/v${GOOGLE_JAVA_FORMAT_VERSION}/google-java-format-${GOOGLE_JAVA_FORMAT_VERSION}-all-deps.jar" \
+    curl -fsSL --retry 3 "https://github.com/google/google-java-format/releases/download/v${GOOGLE_JAVA_FORMAT_VERSION}/google-java-format-${GOOGLE_JAVA_FORMAT_VERSION}-all-deps.jar" \
     -o /root/.local/lib/google-java-format.jar && \
     printf '#!/bin/bash\njava -jar /root/.local/lib/google-java-format.jar "$@"' > /root/.local/bin/google-java-format && \
     # Checkstyle
-    curl -fsSL "https://github.com/checkstyle/checkstyle/releases/download/checkstyle-${CHECKSTYLE_VERSION}/checkstyle-${CHECKSTYLE_VERSION}-all.jar" \
+    curl -fsSL --retry 3 "https://github.com/checkstyle/checkstyle/releases/download/checkstyle-${CHECKSTYLE_VERSION}/checkstyle-${CHECKSTYLE_VERSION}-all.jar" \
     -o /root/.local/lib/checkstyle.jar && \
     printf '#!/bin/bash\njava -jar /root/.local/lib/checkstyle.jar "$@"' > /root/.local/bin/checkstyle && \
     # PMD
-    curl -fsSL "https://github.com/pmd/pmd/releases/download/pmd_releases%2F${PMD_VERSION}/pmd-dist-${PMD_VERSION}-bin.zip" -o /tmp/pmd.zip && \
-    unzip /tmp/pmd.zip -d /root/.local && rm /tmp/pmd.zip && \
+    curl -fsSL --retry 3 "https://github.com/pmd/pmd/releases/download/pmd_releases%%2F${PMD_VERSION}/pmd-dist-${PMD_VERSION}-bin.zip" -o /tmp/pmd.zip && \
+    unzip -q /tmp/pmd.zip -d /root/.local && rm /tmp/pmd.zip && \
     ln -sf /root/.local/pmd-bin-${PMD_VERSION}/bin/pmd /root/.local/bin/pmd && \
     # SpotBugs
-    curl -fsSL "https://github.com/spotbugs/spotbugs/releases/download/${SPOTBUGS_VERSION}/spotbugs-${SPOTBUGS_VERSION}.tgz" | \
+    curl -fsSL --retry 3 "https://github.com/spotbugs/spotbugs/releases/download/${SPOTBUGS_VERSION}/spotbugs-${SPOTBUGS_VERSION}.tgz" | \
     tar -xz -C /root/.local && \
     ln -sf /root/.local/spotbugs-${SPOTBUGS_VERSION}/bin/spotbugs /root/.local/bin/spotbugs && \
-    chmod +x /root/.local/bin/*
+    chmod +x /root/.local/bin/*; \
+    fi
 
 ENV PATH="/root/.local/bin:${PATH}"
 
