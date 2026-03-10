@@ -22,6 +22,13 @@ ARG INSTALL_BROWSER=1
 # ============================================================
 FROM debian:stable-slim AS builder
 
+# 定义所有构建参数 (确保每个阶段都能访问)
+ARG BUN_VERSION=1.3.10
+ARG GO_VERSION=1.26.1
+ARG GOLANGCI_LINT_VERSION=1.64.8
+ARG PYTHON_PACKAGES="python-pptx openpyxl python-docx beautifulsoup4 lxml pyyaml pandoc"
+ARG INSTALL_BROWSER=1
+
 LABEL org.opencontainers.image.base.name="docker.io/library/debian:stable-slim" \
   org.opencontainers.image.source="https://github.com/openclaw/openclaw" \
   org.opencontainers.image.title="OpenClaw Dev (2025 Standard)" \
