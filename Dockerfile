@@ -38,9 +38,9 @@ RUN apt-get update && \
     # 文档处理导出
     pandoc texlive-latex-base texlive-fonts-recommended \
     # 浏览器自动化依赖
-    xvfb libnss3 libatk-bridge2.0-0t64 libdrm2 libxkbcommon0 \
-    libgbm1 libasound2t64 libatspi2.0-0t64 libxshmfence1 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
-    libdbus-1-3 libgtk-3-0t64 fonts-liberation fonts-noto-color-emoji \
+    xvfb libnss3 libatk-bridge2.0-0 libdrm2 libxkbcommon0 \
+    libgbm1 libasound2 libatspi2.0-0 libxshmfence1 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+    libdbus-1-3 libgtk-3-0 fonts-liberation fonts-noto-color-emoji \
     # 基础工具
     unzip file sqlite3 zip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
@@ -178,9 +178,9 @@ RUN apt-get update && \
     # 文档处理
     pandoc texlive-latex-base texlive-fonts-recommended \
     # 浏览器自动化依赖
-    xvfb libnss3 libatk-bridge2.0-0t64 libdrm2 libxkbcommon0 \
-    libgbm1 libasound2t64 libatspi2.0-0t64 libxshmfence1 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
-    libdbus-1-3 libgtk-3-0t64 fonts-liberation fonts-noto-color-emoji \
+    xvfb libnss3 libatk-bridge2.0-0 libdrm2 libxkbcommon0 \
+    libgbm1 libasound2 libatspi2.0-0 libxshmfence1 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+    libdbus-1-3 libgtk-3-0 fonts-liberation fonts-noto-color-emoji \
     # 基础工具
     python3 python3-pip python3-venv unzip file sqlite3 zip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*

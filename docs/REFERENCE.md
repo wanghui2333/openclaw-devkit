@@ -70,6 +70,34 @@
 | `slack-manifest.json` | Slack App 快速导入配置单                         |
 
 ---
+## 🤖 高级多智能体配置 (Advanced Multi-Agent Patterns)
+
+OpenClaw 支持基于 **Commander-Worker (指挥官-执行者)** 模型的高级协作模式，适用于复杂的软件研发全生命周期。
+
+### 1. 指挥官-执行者架构
+*   **指挥官 (Maintainer)**: 唯一与用户交互的入口。负责分解目标、调度 Worker、审查成果并进行 PR 合并。
+*   **专用执行者 (Specialized Workers)**: 
+    *   `scout`: 负责项目环境勘察与上游同步验证。
+    *   `developer`: 负责功能开发与原子化提交 (Commits)。
+    *   `reviewer`: 负责代码规范审查与 PR 描述校验。
+    *   `tester`: 负责本地测试执行。
+    *   `github-ops`: 负责 `gh` CLI 操作与 PR 创建。
+
+### 2. 安全隔离与权限控制
+建议为各 Agent 实施 **最小权限原则 (Least Privilege)**：
+*   **工具隔离**: 通过 `tools.allow` 限制行为（例如：禁止 `scout` 进行 `write` 操作）。
+*   **空间隔离**: 为每个 Agent 设置独立的 `workspace` 路径，避免 Git 指针冲突。
+*   **运行隔离**: 为开发者角色开启 `sandbox.mode: "all"`，在 Docker 容器内进行代码实验。
+
+### 3. 项目感知与模板遵循 (Adherence)
+配置 Agent 规则以提升专业度：
+*   **项目规则**: 要求 `scout` 发现并让团队遵循项目根目录的 `AGENTS.md` 或 `CLAUDE.md`。
+*   **GitHub 模板**: 要求 `main` 与 `github-ops` 在创建 Issue/PR 前检索 `.github/` 下的模板。
+
+### 4. 长期记忆系统 (Memory System)
+通过在 `identity.rules` 中注入指令，让 Agent 定期更新工作区下的 `memory.md`，确保长周期任务的上下文连续性。
+
+---
 
 ## 🔁 核心协作逻辑 (Core Collaboration)
 
