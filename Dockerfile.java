@@ -3,7 +3,7 @@
 # ============================================================
 # 全局构建参数 (跨所有阶段)
 # ============================================================
-ARG BUN_VERSION=1.2.19
+ARG BUN_VERSION=1.3.10
 ARG GO_VERSION=1.26.1
 ARG GOLANGCI_LINT_VERSION=1.64.8
 ARG PYTHON_PACKAGES="python-pptx openpyxl python-docx beautifulsoup4 lxml pyyaml pandoc"
@@ -49,9 +49,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -o Acquire::Retries=3 \
     curl wget jq git ripgrep fd-find bat httpie python3 python3-pip python3-venv build-essential pkg-config \
-    pandoc texlive-latex-base texlive-fonts-recommended xvfb libnss3 libatk-bridge2.0-0t64 libdrm2 libxkbcommon0 \
-    libgbm1 libasound2t64 libatspi2.0-0t64 libxshmfence1 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
-    libdbus-1-3 libgtk-3-0t64 fonts-liberation fonts-noto-color-emoji unzip file sqlite3 zip && \
+    pandoc texlive-latex-base texlive-fonts-recommended xvfb libnss3 libatk-bridge2.0-0 libdrm2 libxkbcommon0 \
+    libgbm1 libasound2 libatspi2.0-0 libxshmfence1 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+    libdbus-1-3 libgtk-3-0 fonts-liberation fonts-noto-color-emoji unzip file sqlite3 zip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ============================================================
@@ -220,21 +220,32 @@ RUN pnpm ui:build
 # ============================================================
 FROM debian:stable-slim AS base
 
+# 定义所有构建参数
+ARG BUN_VERSION=1.3.10
+ARG GO_VERSION=1.26.1
+ARG PYTHON_PACKAGES="python-pptx openpyxl python-docx beautifulsoup4 lxml pyyaml pandoc"
+
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 安装 Node.js (用于运行 pnpm/npm)
-ARG NODE_VERSION=22.22.1
-RUN apt-get update && apt-get install -y curl && \
-    curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" | tar -xJ -C /usr/local --strip-components=1
+# 安装基础工具
+RUN apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl ca-certificates gnupg
+
+# 安装 Node.js 22.x via NodeSource (more reliable for multi-arch)
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -fsSL "https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key" | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" > /etc/apt/sources.list.d/nodesource.list && \
+    apt-get update && \
+    DEBIAN_FRONTEND=noninteractive apt-get install -y nodejs
 
 # 安装运行时依赖
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -o Acquire::Retries=3 \
     curl git openssl \
     pandoc texlive-latex-base texlive-fonts-recommended \
-    xvfb libnss3 libatk-bridge2.0-0t64 libdrm2 libxkbcommon0 \
-    libgbm1 libasound2t64 libatspi2.0-0t64 libxshmfence1 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
-    libdbus-1-3 libgtk-3-0t64 fonts-liberation fonts-noto-color-emoji \
+    xvfb libnss3 libatk-bridge2.0-0 libdrm2 libxkbcommon0 \
+    libgbm1 libasound2 libatspi2.0-0 libxshmfence1 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+    libdbus-1-3 libgtk-3-0 fonts-liberation fonts-noto-color-emoji \
     python3 python3-pip python3-venv unzip file sqlite3 zip && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
