@@ -160,11 +160,16 @@ ENV OPENCLAW_PREFER_PNPM=1
 RUN pnpm ui:build
 
 # ============================================================
-# 第二阶段：运行时基础镜像 (base===)
-# =========================================================
+# 第二阶段：运行时基础镜像 (base)
+# ============================================================
 FROM debian:stable-slim AS base
 
 ENV DEBIAN_FRONTEND=noninteractive
+
+# 安装 Node.js (用于运行 pnpm/npm)
+ARG NODE_VERSION=22.22.1
+RUN apt-get update && apt-get install -y curl && \
+    curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" | tar -xJ -C /usr/local --strip-components=1
 
 # 安装运行时依赖
 RUN apt-get update && \
