@@ -11,37 +11,18 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # 首先准备源码 (所有镜像共用的步骤)
+  # 首先获取 OpenClaw 版本号
   prepare:
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Fetch OpenClaw Source
+      - name: Fetch OpenClaw version
         id: version
         run: |
-          REPO="openclaw/openclaw"
-          VERSION=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | jq -r '.tag_name')
-          echo "Latest version: $VERSION"
-          URL="https://github.com/${REPO}/archive/refs/tags/${VERSION}.tar.gz"
-          mkdir -p .openclaw_src
-          curl -fsSL "$URL" | tar -xzC .openclaw_src --strip-components=1
-          # 确保使用 DevKit 的 Dockerfile 替换源码中的原始文件
-          cp Dockerfile .openclaw_src/Dockerfile
-          cp Dockerfile.java .openclaw_src/Dockerfile.java
-          cp Dockerfile.office .openclaw_src/Dockerfile.office
+          VERSION=$(curl -fsSL "https://api.github.com/repos/openclaw/openclaw/releases/latest" | jq -r '.tag_name')
+          echo "OpenClaw version: $VERSION"
           echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      # 上传源码作为 artifact 供并行任务使用
-      - name: Upload source
-        uses: actions/upload-artifact@v4
-        with:
-          name: openclaw-source
-          path: .openclaw_src
-          retention-days: 1
 
   # 并行构建三个 Docker 镜像
   build:
@@ -65,11 +46,21 @@ jobs:
       packages: write
 
     steps:
-      - name: Download source
-        uses: actions/download-artifact@v4
-        with:
-          name: openclaw-source
-          path: .openclaw_src
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch OpenClaw Source
+        run: |
+          REPO="openclaw/openclaw"
+          VERSION="${{ needs.prepare.outputs.version }}"
+          echo "Building OpenClaw version: $VERSION"
+          URL="https://github.com/${REPO}/archive/refs/tags/${VERSION}.tar.gz"
+          mkdir -p .openclaw_src
+          curl -fsSL "$URL" | tar -xzC .openclaw_src --strip-components=1
+          # 使用 DevKit 的 Dockerfile 替换源码中的文件
+          cp Dockerfile .openclaw_src/Dockerfile
+          cp Dockerfile.java .openclaw_src/Dockerfile.java
+          cp Dockerfile.office .openclaw_src/Dockerfile.office
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
