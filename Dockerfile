@@ -169,6 +169,8 @@ RUN pnpm ui:build
 # ============================================================
 FROM debian:stable-slim AS base
 
+ARG BUN_VERSION=1.3.10
+
 ENV DEBIAN_FRONTEND=noninteractive
 
 # 安装基础工具 (curl, ca-certificates for HTTPS)
