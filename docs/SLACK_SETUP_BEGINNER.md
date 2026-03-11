@@ -74,6 +74,8 @@
 
 6. 点击 **"Next"** -> **"Create"**。
 
+![步骤 1：通过 Manifest 创建](images/guides/slack_step1_manifest.png)
+
 ---
 
 ## 第 2 步：获取 App Token (xapp-)
@@ -84,6 +86,9 @@
 2. 向下滚动到 **"App-Level Tokens"** 部分，点击 **"Generate Token and Scopes"**。
 3. 输入 Token 名称（例如：`openclaw_socket`），并点击 **"Add Scope"**，选择 `connections:write`。
 4. 点击 **"Generate"**，系统会显示一串以 `xapp-...` 开头的字符串。
+
+![步骤 2：启用 Socket Mode](images/guides/slack_step2_socketmode.png)
+
 5. **复制并保存这串代码**。
 
 ---
@@ -93,6 +98,9 @@
 1. 在左侧菜单找到 **"Settings" -> "Install App"**。
 2. 点击 **"Install to Workspace"** 并按照提示点击 **"Allow"** 完成授权。
 3. 授权完成后，你会看到 **"Bot User OAuth Token"**。
+
+![步骤 3：获取 Bot Token (xoxb)](images/guides/slack_step3_tokens.png)
+
 4. **复制并保存这串以 `xoxb-...` 开头的代码**。
 
 ---
