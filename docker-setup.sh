@@ -17,7 +17,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-IMAGE_NAME="${OPENCLAW_IMAGE:-openclaw:dev}"
+IMAGE_NAME="${OPENCLAW_IMAGE:-openclaw-devkit:dev}"
 # COMPOSE_FILE is managed by .env for flexibility
 # EXTRA_COMPOSE_FILE still used for on-the-fly mounts
 EXTRA_COMPOSE_FILE="$ROOT_DIR/docker-compose.dev.extra.yml"
@@ -322,6 +322,10 @@ RAW_EXTRA_MOUNTS="${OPENCLAW_EXTRA_MOUNTS:-}"
 
 OPENCLAW_CONFIG_DIR="${OPENCLAW_CONFIG_DIR:-$HOME/.openclaw}"
 OPENCLAW_WORKSPACE_DIR="${OPENCLAW_WORKSPACE_DIR:-$HOME/.openclaw/workspace}"
+
+# 展开波浪号 Tilde (如果环境是从 .env 以字符串读入 '~' 的话)
+OPENCLAW_CONFIG_DIR="${OPENCLAW_CONFIG_DIR/#\~/$HOME}"
+OPENCLAW_WORKSPACE_DIR="${OPENCLAW_WORKSPACE_DIR/#\~/$HOME}"
 OPENCLAW_GATEWAY_PORT="${OPENCLAW_GATEWAY_PORT:-18789}"
 OPENCLAW_BRIDGE_PORT="${OPENCLAW_BRIDGE_PORT:-18790}"
 OPENCLAW_GATEWAY_BIND="${OPENCLAW_GATEWAY_BIND:-lan}"
@@ -359,6 +363,11 @@ mkdir -p "$OPENCLAW_CONFIG_DIR/agents/main/sessions"
 mkdir -p "$OPENCLAW_CONFIG_DIR/agents/codex/agent"
 mkdir -p "$OPENCLAW_CONFIG_DIR/agents/codex/sessions"
 
+# 优雅迁移 Git 身份：如果发现宿主机有热备用的 Gitconfig，自动推入 Seed，规避 docker-compose 的危险空挂载
+if [[ -f "$HOME/.gitconfig-hotplex" ]]; then
+  cp "$HOME/.gitconfig-hotplex" "$OPENCLAW_CONFIG_DIR/.gitconfig"
+fi
+
 # ============================================================
 # 生成 Gateway Token (复用已有配置)
 # ============================================================
@@ -393,16 +402,49 @@ else
 
   # 选择 Dockerfile
   DOCKERFILE_PATH="$ROOT_DIR/Dockerfile"
+  IS_VARIANT=false
+  # 1+3 架构: 变体依赖于标准版 (BASE_IMAGE)
+  BASE_IMAGE_TAG="${OPENCLAW_IMAGE_BASE:-openclaw-devkit:dev}"
+
   if [[ "$IMAGE_NAME" == *"-java"* ]]; then
     DOCKERFILE_PATH="$ROOT_DIR/Dockerfile.java"
+    IS_VARIANT=true
+  elif [[ "$IMAGE_NAME" == *"-go"* ]]; then
+    DOCKERFILE_PATH="$ROOT_DIR/Dockerfile.go"
+    IS_VARIANT=true
   elif [[ "$IMAGE_NAME" == *"office"* ]]; then
     DOCKERFILE_PATH="$ROOT_DIR/Dockerfile.office"
+    IS_VARIANT=true
   fi
 
+  # 1+3 架构: 注入构建资产到上下文
+  cp -f "$ROOT_DIR"/Dockerfile* "$ROOT_DIR"/docker-entrypoint.sh "$ROOT_DIR"/.openclaw_src/ 2>/dev/null || true
+
+  # 如果是变体，必须先构建/确保基座镜像存在
+  if [ "$IS_VARIANT" = true ]; then
+    info "正在构建基座镜像: ${CYAN}${BASE_IMAGE_TAG}${NC}"
+    docker build \
+      -t "$BASE_IMAGE_TAG" \
+      -f "$ROOT_DIR/.openclaw_src/Dockerfile" \
+      --build-arg "INSTALL_BROWSER=${INSTALL_BROWSER}" \
+      --build-arg "DOCKER_MIRROR=${DOCKER_MIRROR:-docker.io}" \
+      --build-arg "APT_MIRROR=${APT_MIRROR:-deb.debian.org}" \
+      --build-arg "NPM_MIRROR=${NPM_MIRROR:-}" \
+      --build-arg "PYTHON_MIRROR=${PYTHON_MIRROR:-}" \
+      --build-arg "HTTP_PROXY=${HTTP_PROXY:-}" \
+      --build-arg "HTTPS_PROXY=${HTTPS_PROXY:-}" \
+      "$ROOT_DIR/.openclaw_src"
+  fi
+
+  info "正在构建目标镜像: ${CYAN}$IMAGE_NAME${NC}"
   docker build \
     -t "$IMAGE_NAME" \
-    -f "$DOCKERFILE_PATH" \
-    --build-arg "INSTALL_BROWSER=${INSTALL_BROWSER}" \
+    -f "$ROOT_DIR/.openclaw_src/$(basename "$DOCKERFILE_PATH")" \
+    --build-arg "BASE_IMAGE=${BASE_IMAGE_TAG}" \
+    --build-arg "DOCKER_MIRROR=${DOCKER_MIRROR:-docker.io}" \
+    --build-arg "APT_MIRROR=${APT_MIRROR:-deb.debian.org}" \
+    --build-arg "NPM_MIRROR=${NPM_MIRROR:-}" \
+    --build-arg "PYTHON_MIRROR=${PYTHON_MIRROR:-}" \
     --build-arg "HTTP_PROXY=${HTTP_PROXY:-}" \
     --build-arg "HTTPS_PROXY=${HTTPS_PROXY:-}" \
     "$ROOT_DIR/.openclaw_src"
@@ -460,7 +502,9 @@ upsert_env "$ENV_FILE" \
   OPENCLAW_EXTRA_MOUNTS \
   OPENCLAW_HOME_VOLUME \
   OPENCLAW_SKIP_BUILD \
-  COMPOSE_FILE
+  COMPOSE_FILE \
+  GIT_USER_NAME \
+  GIT_USER_EMAIL
 success "环境变量同步完成"
 
 # ============================================================
@@ -470,10 +514,9 @@ success "环境变量同步完成"
 echo ""
 # 修复数据目录权限
 # Use -xdev to restrict chown to the config-dir mount only
-# 使用 root 用户修复权限，但限制在 .openclaw 目录内
+# 使用 root 用户修复权限，限制由于 openclaw-cli 仅挂载了 .openclaw 且为统一存储池
 docker compose run --rm --user root --entrypoint sh openclaw-cli -c \
-  'find /home/node/.openclaw -xdev -exec chown node:node {} + 2>/dev/null || true; \
-   [ -d /home/node/.openclaw/workspace/.openclaw ] && chown -R node:node /home/node/.openclaw/workspace/.openclaw || true'
+  'find /home/node/.openclaw -xdev -exec chown node:node {} + 2>/dev/null || true'
 
 # ============================================================
 # 辅助函数：运行 CLI 命令

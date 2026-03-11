@@ -18,7 +18,7 @@
 # YAML Anchors for DRY Configuration
 # ------------------------------------------------------------------------------
 x-openclaw-common: &openclaw-common
-  image: ${OPENCLAW_IMAGE:-openclaw:dev}
+  image: ${OPENCLAW_IMAGE:-openclaw-devkit:dev}
   environment: &common-env
     HOST_UID: ${HOST_UID:-1000}
     # ─────────────────────────────────────────────────────────────────
@@ -86,8 +86,8 @@ services:
     user: "0:0" # Run as root to fix permissions - enabled to fix EACCES
     container_name: openclaw-gateway
     ports:
-      - "127.0.0.1:18789:18789"
-      - "127.0.0.1:18790:18790"
+      - "127.0.0.1:${OPENCLAW_GATEWAY_PORT:-18789}:18789"
+      - "127.0.0.1:${OPENCLAW_BRIDGE_PORT:-18790}:18790"
     env_file:
       - .env
     init: true
@@ -106,10 +106,6 @@ services:
       # === 可选挂载 (Optional) - 根据需求选择 ===
       # Claude Code session state (shared with host)
       - ${HOME}/.claude:/home/node/.claude:rw
-      # Git configuration (NOTE: use a separate config for OpenClaw's dedicated Git identity)
-      # Reason: Gives AI its own identity (e.g., HotPlexBot01), separate from your main Git identity
-      # Example: ~/.gitconfig-openclaw, ~/.gitconfig-bot, etc.
-      - ${HOME}/.gitconfig-hotplex:/home/node/.gitconfig:ro
       # Named volumes for caches (optional, speeds up restarts)
       - openclaw-node-modules:/app/node_modules:rw
       - openclaw-go-mod:/home/node/go/pkg/mod:rw

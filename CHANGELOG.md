@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.3.0] - 2026-03-11
+
+### Added
+- **1+3 Hierarchical Architecture**: Refactored Docker build system into a base image (`Dockerfile.base`) and three specialized variant stacks (Node, Java, Office) to reduce redundancy and improve build speed.
+- **Go Variant**: Introduced a dedicated Go language variant (`Dockerfile.go`) integrated into the hierarchical build system.
+- **Variant Selection Guide**: Added `docs/IMAGE_VARIANTS.md` for detailed feature comparison between image variants.
+
+### Changed
+- **README Refresh**: Updated core features and installation guide to reflect the new hierarchical architecture and Go support.
+- **Build System**: Unified variant builds using `make build-<variant>` pattern with automatic base image dependency tracking.
+
 ## [v1.2.4] - 2026-03-11
 
 ### Added

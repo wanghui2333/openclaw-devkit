@@ -1,0 +1,55 @@
+# syntax=docker/dockerfile:1
+
+# ============================================================
+# OpenClaw 1+3 DRY 架构 - Go 扩展版
+# 基于 openclaw:dev (Standard) 镜像构建
+# ============================================================
+ARG BASE_IMAGE=openclaw-devkit:dev
+ARG GO_VERSION=1.26.1
+ARG GOLANGCI_LINT_VERSION=1.64.8
+
+# 继承自标准版镜像
+FROM ${BASE_IMAGE}
+
+USER root
+
+# ============================================================
+# Go 1.26 工具链安装
+# ============================================================
+RUN ARCH=$(dpkg --print-architecture) && \
+    curl -fsSL "https://go.dev/dl/go${GO_VERSION}.linux-${ARCH}.tar.gz" | tar -C /usr/local -xz && \
+    ln -sf /usr/local/go/bin/go /usr/local/bin/go && \
+    ln -sf /usr/local/go/bin/gofmt /usr/local/bin/gofmt
+
+ENV PATH="/usr/local/go/bin:${PATH}"
+ENV GOPATH=/home/node/go
+ENV PATH="${GOPATH}/bin:${PATH}"
+
+# ============================================================
+# Go 开发工具 (golangci-lint, gopls, dlv, etc.)
+# ============================================================
+RUN ARCH=$(dpkg --print-architecture) && \
+    curl -fsSL "https://github.com/golangci/golangci-lint/releases/download/v${GOLANGCI_LINT_VERSION}/golangci-lint-${GOLANGCI_LINT_VERSION}-linux-${ARCH}.tar.gz" | \
+    tar -xz -C /tmp && \
+    mv /tmp/golangci-lint-${GOLANGCI_LINT_VERSION}-linux-${ARCH}/golangci-lint /usr/local/bin/ && \
+    rm -rf /tmp/golangci-lint-*
+
+# Go 工具安装 (并发提速)
+ARG GO_TOOLS="\
+    golang.org/x/tools/gopls@latest \
+    github.com/go-delve/delve/cmd/dlv@latest \
+    honnef.co/go/tools/cmd/staticcheck@latest \
+    github.com/securego/gosec/v2/cmd/gosec@latest \
+    golang.org/x/tools/cmd/goimports@latest \
+    github.com/air-verse/air@latest \
+    github.com/google/mock/mockgen@latest \
+    github.com/google/wire/cmd/wire@latest \
+    github.com/onsi/ginkgo/v2/ginkgo@latest"
+
+RUN mkdir -p "${GOPATH}/bin" && chown -R node:node "${GOPATH}" && \
+    # 使用 node 用户安装 Go 工具
+    sudo -u node PATH=$PATH:/usr/local/go/bin GOPATH=$GOPATH go install -v $GO_TOOLS
+
+# 切换回 node 用户
+USER node
+WORKDIR /app

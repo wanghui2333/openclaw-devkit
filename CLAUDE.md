@@ -11,15 +11,17 @@ openclaw-devkit 开发工具箱套件 - 为 [OpenClaw](https://github.com/opencl
 ```
 openclaw-devkit/
 ├── Makefile                # Docker 运维命令入口
-├── docker-compose.dev.yml  # Docker Compose 配置
-├── Dockerfile.dev          # 开发环境镜像定义
-├── docker-dev-setup.sh     # 初始化脚本
-├── update-source.sh        # 从 GitHub Release 更新源码
-└── .openclaw_src/          # OpenClaw 源码目录 (git submodule)
-    ├── src/                 # 核心源码
-    ├── extensions/          # 扩展插件 (Discord, Slack, Zalo, Feishu 等)
-    ├── apps/                # 移动端应用 (iOS, Android, macOS)
-    └── docs/                # 文档
+├── docker-compose.yml      # Docker Compose 配置 (支持 dev/java/office)
+├── Dockerfile             # 开发环境镜像定义 (标准版)
+├── Dockerfile.java        # Java 版本镜像
+├── Dockerfile.office     # Office 版本镜像
+├── docker-setup.sh       # 交互式初始化脚本
+├── update-source.sh      # 从 GitHub Release 更新源码
+└── .openclaw_src/       # OpenClaw 源码目录 (git submodule)
+    ├── src/              # 核心源码
+    ├── extensions/       # 扩展插件 (Discord, Slack, Zalo, Feishu 等)
+    ├── apps/             # 移动端应用 (iOS, Android, macOS)
+    └── docs/             # 文档
 ```
 
 ## Common Commands (Makefile)
@@ -62,11 +64,31 @@ make clean-volumes    # 清理所有数据卷 (危险!)
 | HTTP Proxy       | 7897  | 代理服务 (访问外网)             |
 | Claude API Proxy | 15721 | Claude API 代理                 |
 
+## Docker Image Variants
+
+| Variant | Dockerfile    | Use Case                    |
+|---------|---------------|------------------------------|
+| dev     | Dockerfile    | 标准开发版 (Node.js + Go)   |
+| java    | Dockerfile.java | Java 支持 (包含 JDK)       |
+| office  | Dockerfile.office | 办公环境集成 (PDF/OCR)    |
+
+选择版本: `make install <variant>` 或 `make build <variant>`
+
 ## Configuration
 
 - 环境变量: `.env` 文件 (git-ignored)
 - 代理配置: 通过 `HTTP_PROXY`/`HTTPS_PROXY` 环境变量配置，用于访问 Google 和 Claude API
 - 配置目录: 容器内 `~/.openclaw/`
+
+## Setup Script
+
+`docker-setup.sh` 是交互式初始化脚本，用于:
+- 检测宿主机环境 (Docker/Podman)
+- 配置代理和网络设置
+- 生成必要的配置文件 (.env)
+- 选择并拉取 Docker 镜像版本
+
+首次使用建议运行 `make install` 或直接运行 `./docker-setup.sh`
 
 ## Source Code Notes
 
@@ -111,6 +133,45 @@ GITHUB_TOKEN=xxx
 - Gateway 日志位于容器内 `/tmp/openclaw-gateway.log`
 - 进入容器后可直接运行 `openclaw` 命令
 
+## Gotchas
+
+### Shell 脚本换行符问题
+
+**症状**: 执行 `make up` 时报错 `env: 'bash\r': No such file or directory`
+
+**原因**: Windows 和 Linux 换行符不兼容 (CRLF vs LF)
+
+**排查**:
+```bash
+# 检查文件是否有 CRLF
+hexdump -C docker-entrypoint.sh | grep "0d 0a"
+file docker-entrypoint.sh  # Windows 文件会显示 "CRLF"
+
+# 查看容器日志
+docker compose logs openclaw-gateway
+```
+
+**解决**:
+```bash
+# 转换换行符 (推荐)
+sed -i 's/\r$//' docker-entrypoint.sh
+sed -i 's/\r$//' docker-setup.sh
+sed -i 's/\r$//' update-source.sh
+
+# 重启服务
+make down
+make up
+```
+
+**预防**:
+```bash
+# Git 全局配置
+git config --global core.autocrlf input
+
+# 克隆后检查
+git diff --check
+```
+
 ## Dockerfile Development
 
 ### Version Verification
@@ -125,7 +186,7 @@ curl -fsSL -o /dev/null -w "%{http_code}" "https://nodejs.org/dist/v22.22.1/node
 docker build --check -f Dockerfile.dev .  # Validate without full build
 ```
 
-### Current Stable Versions (2025)
+### Current Stable Versions (2026)
 - Node.js: 22.x LTS (24.x not yet released)
 - Go: 1.26.x (1.27.x not yet released)
 - golangci-lint: 1.64.x

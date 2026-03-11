@@ -20,7 +20,7 @@ ARG PYTHON_MIRROR=
 # 集成开发工具: Playwright, Claude Code, OpenCode
 #
 # 构建命令:
-#   docker build -t openclaw:dev -f Dockerfile .
+#   docker build -t openclaw-devkit:dev -f Dockerfile .
 #
 # GitHub CI 优化版本 - 使用官方源，无代理依赖
 
@@ -78,7 +78,9 @@ RUN apt-get update && \
     libgbm1 libasound2 libatspi2.0-0 libxshmfence1 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
     libdbus-1-3 libgtk-3-0 fonts-liberation fonts-noto-color-emoji \
     # 基础工具
-    unzip file sqlite3 zip && \
+    unzip file sqlite3 zip \
+    # 2026 增强: 现代导航与搜索 (Agent UX)
+    zoxide fzf && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ============================================================
@@ -114,6 +116,22 @@ RUN ARCH=$(dpkg --print-architecture) && \
     rm /tmp/gh.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
+# ============================================================
+# 2026 专家工具下载 (uv, yq, just, lazygit)
+# ============================================================
+RUN ARCH=$(dpkg --print-architecture) && \
+    # uv (Python 极速版)
+    curl -fsSL https://astral.sh/uv/install.sh | sh && \
+    # yq (YAML 专家)
+    YQ_VERSION=$(curl -fsSL https://api.github.com/repos/mikefarah/yq/releases/latest | jq -r '.tag_name') && \
+    curl -fsSL "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${ARCH}" -o /usr/local/bin/yq && \
+    chmod +x /usr/local/bin/yq && \
+    # just (任务运行器)
+    curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to /usr/local/bin && \
+    # lazygit (Git TUI)
+    LG_VERSION=$(curl -fsSL https://api.github.com/repos/jesseduffield/lazygit/releases/latest | jq -r '.tag_name' | sed 's/^v//') && \
+    curl -fsSL "https://github.com/jesseduffield/lazygit/releases/download/v${LG_VERSION}/lazygit_${LG_VERSION}_Linux_x86_64.tar.gz" | tar -xz -C /usr/local/bin lazygit
 
 # ============================================================
 # 阶段 1 (续): 安装语言运行时和包管理器
@@ -245,6 +263,14 @@ RUN mkdir -p /etc/apt/keyrings && \
 RUN apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -o Acquire::Retries=3 \
     git openssl \
+    # AI Agent 核心依赖 (Claude Code / OpenClaw Grep & Glob 底层)
+    jq ripgrep fd-find \
+    # 编译 Node.js 原生模块 (better-sqlite3 等)
+    build-essential pkg-config \
+    # 开发者工具
+    bat httpie wget \
+    # 容器内便利工具
+    less vim-tiny tree procps openssh-client \
     # 文档处理
     pandoc texlive-latex-base texlive-fonts-recommended \
     # 浏览器自动化依赖
@@ -252,11 +278,19 @@ RUN apt-get update && \
     libgbm1 libasound2 libatspi2.0-0 libxshmfence1 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
     libdbus-1-3 libgtk-3-0 fonts-liberation fonts-noto-color-emoji \
     # 基础工具
-    python3 python3-pip python3-venv unzip file sqlite3 zip && \
+    python3 python3-pip python3-venv unzip file sqlite3 zip \
+    # 2026 增强: 现代导航与搜索
+    zoxide fzf && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # 配置 npm 使用官方源
-RUN npm install -g pnpm@latest
+RUN npm install -g pnpm@latest \
+    @anthropic-ai/claude-code@latest \
+    opencode-ai \
+    @mariozechner/pi-coding-agent \
+    tldr && \
+    # 2026 增强: 安装 uv (面向 Agent 提速)
+    curl -fsSL https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/bin sh
 
 # 安装 Bun 运行时
 RUN ARCH=$(dpkg --print-architecture) && \
@@ -291,6 +325,12 @@ COPY --from=builder --chown=node:node /app/openclaw.mjs .
 COPY --from=builder --chown=node:node /app/extensions ./extensions
 COPY --from=builder --chown=node:node /app/skills ./skills
 COPY --from=builder --chown=node:node /app/docs ./docs
+
+# 复制专家工具
+COPY --from=builder /usr/local/bin/yq /usr/local/bin/yq
+COPY --from=builder /usr/local/bin/just /usr/local/bin/just
+COPY --from=builder /usr/local/bin/lazygit /usr/local/bin/lazygit
+COPY --from=builder /usr/bin/gh /usr/local/bin/gh
 
 # 改变目录 owner
 RUN chown -R node:node /app
@@ -334,7 +374,10 @@ RUN mkdir -p /opt/claude-seed/skills/playwright-cli/references && \
 # 暴露 CLI
 COPY docker-entrypoint.sh /usr/local/bin/
 RUN ln -sf /app/openclaw.mjs /usr/local/bin/openclaw \
-    && chmod 755 /app/openclaw.mjs /usr/local/bin/docker-entrypoint.sh
+    && chmod 755 /app/openclaw.mjs /usr/local/bin/docker-entrypoint.sh \
+    && echo 'alias ls="ls --color=auto"' >> /home/node/.bashrc \
+    && echo 'alias ll="ls -alF"' >> /home/node/.bashrc \
+    && echo 'eval "$(zoxide init bash)"' >> /home/node/.bashrc
 
 # 环境变量
 ENV NODE_ENV=production \

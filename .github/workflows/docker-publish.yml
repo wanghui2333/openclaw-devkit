@@ -95,18 +95,11 @@ jobs:
             fi
           fi
 
-  # 核心构建阶段
-  build:
+  # 核心构建阶段 - 基座镜像 (Standard)
+  build-base:
     needs: prepare
     if: needs.prepare.outputs.should_build == 'true'
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        variant:
-          - { name: standard, dockerfile: Dockerfile, suffix: '' }
-          - { name: java, dockerfile: Dockerfile.java, suffix: '-java' }
-          - { name: office, dockerfile: Dockerfile.office, suffix: '-office' }
     permissions:
       contents: read
       packages: write
@@ -127,8 +120,6 @@ jobs:
           mkdir -p .openclaw_src
           curl -fsSL "$URL" | tar -xzC .openclaw_src --strip-components=1
           
-          # 注入 DevKit 定制化构建资产 (优雅覆盖)
-          # 使用 cp -f 确保即使文件不存在也不会中断流程 (由 set -e 控制)
           cp -f Dockerfile* .openclaw_src/ 2>/dev/null || true
           cp -f docker-entrypoint.sh .openclaw_src/ 2>/dev/null || true
 
@@ -153,9 +144,77 @@ jobs:
           tags: |
             type=ref,event=branch
             type=sha,prefix=${{ needs.prepare.outputs.version }}-,format=short
-            # 官方语义化版本标记
+            type=raw,value=${{ needs.prepare.outputs.version }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and push standard
+        uses: docker/build-push-action@v5
+        with:
+          context: .openclaw_src
+          file: .openclaw_src/Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # 核心构建阶段 - 变体镜像 (Go, Java, Office)
+  build-variants:
+    needs: [prepare, build-base]
+    if: needs.prepare.outputs.should_build == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - { name: go, dockerfile: Dockerfile.go, suffix: '-go' }
+          - { name: java, dockerfile: Dockerfile.java, suffix: '-java' }
+          - { name: office, dockerfile: Dockerfile.office, suffix: '-office' }
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch & Prepare Upstream Source
+        shell: bash
+        run: |
+          set -euo pipefail
+          REPO="openclaw/openclaw"
+          VERSION="${{ needs.prepare.outputs.version }}"
+          URL="https://github.com/${REPO}/archive/refs/tags/${VERSION}.tar.gz"
+          
+          echo "Downloading upstream source: $VERSION"
+          mkdir -p .openclaw_src
+          curl -fsSL "$URL" | tar -xzC .openclaw_src --strip-components=1
+          
+          cp -f Dockerfile* .openclaw_src/ 2>/dev/null || true
+          cp -f docker-entrypoint.sh .openclaw_src/ 2>/dev/null || true
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ needs.prepare.outputs.image_name }}
+          tags: |
+            type=sha,prefix=${{ needs.prepare.outputs.version }}${{ matrix.variant.suffix }}-,format=short
             type=raw,value=${{ needs.prepare.outputs.version }}${{ matrix.variant.suffix }}
-            # 浮动 Tags
             type=raw,value=latest${{ matrix.variant.suffix }},enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build and push ${{ matrix.variant.name }}
@@ -165,6 +224,8 @@ jobs:
           file: .openclaw_src/${{ matrix.variant.dockerfile }}
           push: true
           platforms: linux/amd64,linux/arm64
+          build-args: |
+            BASE_IMAGE=${{ env.REGISTRY }}/${{ needs.prepare.outputs.image_name }}:${{ needs.prepare.outputs.version }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha

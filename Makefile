@@ -12,8 +12,10 @@
 # 示例:
 #   make install              # 安装标准版
 #   make install java        # 安装 Java 版
+#   make install go          # 安装 Go 版
 #   make install office      # 安装 Office 版
 #   make build              # 构建标准版镜像
+#   make rebuild go         # 构建并重启 Go 版
 #   make rebuild office     # 构建并重启 Office 版
 # ==============================================================================
 
@@ -47,11 +49,11 @@ ERROR   := $(RED)$(BOLD)✖$(NC)
 
 # COMPOSE_FILE is managed by .env for flexibility
 SETUP_SCRIPT := docker-setup.sh
-GATEWAY_PORT := 18789
+GATEWAY_PORT ?= $(if $(OPENCLAW_GATEWAY_PORT),$(OPENCLAW_GATEWAY_PORT),18789)
 OPENCLAW_BIN := openclaw
 
 # 镜像配置 (优先级: .env > 默认值)
-INITIAL_IMAGE_NAME := $(strip $(if $(OPENCLAW_IMAGE),$(OPENCLAW_IMAGE),openclaw:dev))
+INITIAL_IMAGE_NAME := $(strip $(if $(OPENCLAW_IMAGE),$(OPENCLAW_IMAGE),openclaw-devkit:dev))
 IMAGE_NAME := $(INITIAL_IMAGE_NAME)
 
 # Docker 构建公共参数 (提供安全默认值以支持回退到原始源)
@@ -81,7 +83,7 @@ help: ## 显示完整命令列表
 	@printf "    %-22s %s\n" "make restart" "服务重启"
 	@printf "    %-22s %s\n" "make status" "查看分层编排状态"
 	@echo ""
-	@echo "  $(BOLD)🔧  构建引擎 (Version: dev|java|office)$(NC)"
+	@echo "  $(BOLD)🔧  构建引擎 (Version: dev|go|java|office)$(NC)"
 	@printf "    %-22s %s\n" "make build" "感知式构建 (根据 SKIP_BUILD)"
 	@printf "    %-22s %s\n" "make rebuild" "强制更新镜像并重启"
 	@echo ""
@@ -97,15 +99,18 @@ help: ## 显示完整命令列表
 	@echo ""
 	@echo "  ══════════════════════════════════════════════════════════"
 	@echo "  $(BOLD)分级调用:$(NC) make <cmd> <version>"
-	@echo "  $(INFO)  $(YELLOW)dev$(NC) (标准) | $(YELLOW)java$(NC) (增强) | $(YELLOW)office$(NC) (办公)"
+	@echo "  $(INFO)  $(YELLOW)dev$(NC) (标准) | $(YELLOW)go$(NC) (Go版) | $(YELLOW)java$(NC) (增强) | $(YELLOW)office$(NC) (办公)"
 	@echo ""
-	@echo "  $(BOLD)示例:$(NC) ${CYAN}make install office${NC}"
+	@echo "  $(BOLD)示例:$(NC) ${CYAN}make install go${NC}"
 	@echo "  ══════════════════════════════════════════════════════════"
 	@echo ""
 
 # ============================================================
 # 版本选择 (伪目标)
 # ============================================================
+
+go: ## 内部: 选择 Go 版
+	@:
 
 java: ## 内部: 选择 Java 版
 	@:
@@ -157,17 +162,23 @@ status: ## 查看服务状态
 # 构建与清理
 # ============================================================
 
-build: ## 构建镜像
+build: ## 构建标准版镜像 (1+3 基座)
 	@$(call do_build,dev,$(MAKECMDGOALS))
 
-build-java: ## 构建 Java 版镜像
+build-go: build ## 构建 Go 版镜像 (基于 Standard)
+	@$(call do_build,go,$(MAKECMDGOALS))
+
+build-java: build ## 构建 Java 版镜像 (基于 Standard)
 	@$(call do_build,java,$(MAKECMDGOALS))
 
-build-office: ## 构建 Office 版镜像
+build-office: build ## 构建 Office 版镜像 (基于 Standard)
 	@$(call do_build,office,$(MAKECMDGOALS))
 
 rebuild: ## 重建镜像并重启
 	@$(call do_rebuild,dev,$(MAKECMDGOALS))
+
+rebuild-go: ## 重建 Go 版并重启
+	@$(call do_rebuild,go,$(MAKECMDGOALS))
 
 rebuild-java: ## 重建 Java 版并重启
 	@$(call do_rebuild,java,$(MAKECMDGOALS))
@@ -186,7 +197,8 @@ clean-volumes: ## 清理所有数据卷
 	@docker compose down -v
 	@docker volume rm openclaw-node-modules openclaw-go-mod \
 		openclaw-playwright-cache openclaw-playwright-bin \
-		openclaw-sessions-main openclaw-sessions-codex 2>/dev/null || true
+		openclaw-sessions-main openclaw-sessions-codex \
+		openclaw-state 2>/dev/null || true
 	@echo "✓ 数据卷已清理"
 
 # ============================================================
@@ -278,7 +290,9 @@ $(if $(filter office %office,$(1)),\
 	$(eval IMAGE_NAME := $(INITIAL_IMAGE_NAME)-office),\
 $(if $(filter java %java,$(1)),\
 	$(eval IMAGE_NAME := $(INITIAL_IMAGE_NAME)-java),\
-$(eval IMAGE_NAME := $(INITIAL_IMAGE_NAME))))
+$(if $(filter go %go,$(1)),\
+	$(eval IMAGE_NAME := $(INITIAL_IMAGE_NAME)-go),\
+$(eval IMAGE_NAME := $(INITIAL_IMAGE_NAME)))))
 endef
 
 define do_build
@@ -288,10 +302,13 @@ $(call select_image,$(2))
 	docker pull $(IMAGE_NAME); \
 else \
 	echo "==> 正在构建镜像: $(IMAGE_NAME)"; \
+	BASE_IMG=$(INITIAL_IMAGE_NAME); \
+	cp -f Dockerfile* docker-entrypoint.sh .openclaw_src/ 2>/dev/null || true; \
 	docker build \
 		-t $(IMAGE_NAME) \
-		-f $(if $(filter java,$(1)),Dockerfile.java,$(if $(filter office,$(1)),Dockerfile.office,Dockerfile)) \
+		-f .openclaw_src/$(if $(filter java,$(1)),Dockerfile.java,$(if $(filter go,$(1)),Dockerfile.go,$(if $(filter office,$(1)),Dockerfile.office,Dockerfile))) \
 		$(DOCKER_BUILD_ARGS) \
+		--build-arg BASE_IMAGE=$$BASE_IMG \
 		.openclaw_src; \
 fi
 endef

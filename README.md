@@ -19,11 +19,11 @@
 ## ✨ 核心特性
 
 - 📦 **一键就绪**：基于 Docker Compose，屏蔽繁琐依赖
+- 🧩 **1+3 阶梯架构**：采用高效的「1个基座 + 3类堆栈」设计，极致 DRY
 - 🧠 **AI 原生集成**：内置 Claude Code、OpenCode、Pi-Mono
 - 🔧 **开箱即用**：预配置开发环境，无需手动搭建
 - 🚀 **快速启动**：一键部署，分秒间启动完整开发栈
 - 🔒 **安全隔离**：容器化运行，环境隔离安全可控
-- 📱 **多端支持**：支持 macOS、Windows、Linux 全平台
 - 💾 **数据持久化**：会话、配置自动保存，重启不丢失
 
 ---
@@ -85,9 +85,10 @@ make onboard
 
 | 版本 | 安装命令 | 说明 |
 | :--- | :--- | :--- |
-| **标准版** | `make install` | 默认版本 (Node + Go + Python + Playwright) |
-| **Office 版** | `make install office` | 含 pandoc + LaTeX + OCR |
-| **Java 版** | `make install java` | 含 JDK 21 + Gradle + Maven |
+| **标准版** | `make install` | 默认版本 (Node + Python + Playwright) |
+| **Go 增强版** | `make install go` | 在标准版基础上集成 Go 1.26 + 常用工具 |
+| **Java 增强版** | `make install java` | 含 JDK 21 + Gradle + Maven |
+| **Office 旗舰版** | `make install office` | 专注 RAG 预处理：pandoc + LaTeX + OCR |
 
 ---
 
@@ -128,11 +129,14 @@ make onboard
 <summary><b>Q: 如何切换版本？</b></summary>
 
 ```bash
-# Office 办公版
-make rebuild office
+# Go 开发版
+make rebuild go
 
 # Java 增强版
 make rebuild java
+
+# Office 办公版
+make rebuild office
 ```
 </details>
 
