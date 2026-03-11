@@ -64,9 +64,9 @@ handle it in this order:
 3. Verify Event Subscriptions is set to **Long Connection (WebSocket)** and keep that page refreshed.
 4. Check gateway logs for success markers such as `WebSocket connected` or `event stream started`.
 5. If no connection logs appear, check outbound networking first:
-	- whether the server can access Feishu Open Platform domains
-	- whether `HTTP_PROXY` / `HTTPS_PROXY` is configured
-	- whether your proxy allows container egress traffic
+    - whether the server can access Feishu Open Platform domains
+    - whether `HTTP_PROXY` / `HTTPS_PROXY` is configured
+    - whether your proxy allows container egress traffic
 6. Return to Event Subscriptions, refresh, and save again.
 
 If it still fails, the most common causes are credential mismatch or app not published/installed. Re-check:
