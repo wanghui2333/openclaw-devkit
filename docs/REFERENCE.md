@@ -108,6 +108,10 @@ make install java
 
 ## ⚡ 扩展：第三方通讯平台接入
 OpenClaw 支持通过 Socket Mode 接入多种办公平台。
+
+> 💡 **为什么选择 Slack 和飞书？**
+> OpenClaw 核心定位为高级生产力工具。区别于个人社交软件，Slack 和飞书在**企业级权限管控**、**高阶富文本卡片**（完美支持 Markdown / 代码块高亮 / 交互组件）以及**长连接模式（Socket Mode / WebSocket）**方面具备压倒性优势。最关键的是，基于长链接通道使得 OpenClaw 能够 100% 运行在内网环境（无公网 IP、免 Webhook 穿透映射），构筑了极其坚固的数据安全防线。
+
 - **Slack (推荐)**：请参阅 [Slack 接入保姆级教程](SLACK_SETUP_BEGINNER.md)。
 - **飞书 (Lark)**：开发中，敬请期待。
 

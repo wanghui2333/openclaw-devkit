@@ -108,6 +108,10 @@ For team collaboration or Git management, we recommend the **"Symlink Isolation 
 
 ## ⚡ Extension: Third-party Communication Platforms
 OpenClaw supports connecting to various office platforms via Socket Mode.
+
+> 💡 **Why specifically Slack and Feishu (Lark)?**
+> OpenClaw is positioned as an advanced productivity tool. Unlike generic social apps, Slack and Feishu offer overwhelming advantages in **enterprise-grade permission control**, **advanced rich text formatting** (flawless Markdown, highlighted code blocks, interactive UI components), and **persistent connections (Socket Mode / WebSocket)**. Most crucially, relying on these socket tunnels allows OpenClaw to operate 100% behind firewalls on an intranet (no public IP required, no complex Webhook tunneling), ensuring a fundamentally secure data perimeter.
+
 - **Slack (Recommended)**: Refer to the [Slack Setup Beginner Guide](SLACK_SETUP_BEGINNER_en.md).
 - **Feishu (Lark)**: Development in progress, stay tuned.
 
