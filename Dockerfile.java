@@ -375,24 +375,25 @@ RUN for dir in /app/extensions /app/.agent /app/.agents; do \
     fi; \
     done
 
-# 安装 Playwright CLI skills (让 Claude Code 可以调用 Playwright)
-RUN mkdir -p /home/node/.claude/skills/playwright-cli/references && \
-    curl -fsSL -o /home/node/.claude/skills/playwright-cli/SKILL.md \
+# 安装 Playwright CLI skills (隔离至 safe-zone 以防止被宿主机数据卷挂载掩盖)
+RUN mkdir -p /opt/claude-seed/skills/playwright-cli/references && \
+    curl -fsSL -o /opt/claude-seed/skills/playwright-cli/SKILL.md \
     https://raw.githubusercontent.com/microsoft/playwright-cli/main/skills/playwright-cli/SKILL.md && \
-    curl -fsSL -o /home/node/.claude/skills/playwright-cli/references/request-mocking.md \
+    curl -fsSL -o /opt/claude-seed/skills/playwright-cli/references/request-mocking.md \
     https://raw.githubusercontent.com/microsoft/playwright-cli/main/skills/playwright-cli/references/request-mocking.md && \
-    curl -fsSL -o /home/node/.claude/skills/playwright-cli/references/running-code.md \
+    curl -fsSL -o /opt/claude-seed/skills/playwright-cli/references/running-code.md \
     https://raw.githubusercontent.com/microsoft/playwright-cli/main/skills/playwright-cli/references/running-code.md && \
-    curl -fsSL -o /home/node/.claude/skills/playwright-cli/references/session-management.md \
+    curl -fsSL -o /opt/claude-seed/skills/playwright-cli/references/session-management.md \
     https://raw.githubusercontent.com/microsoft/playwright-cli/main/skills/playwright-cli/references/session-management.md && \
-    curl -fsSL -o /home/node/.claude/skills/playwright-cli/references/storage-state.md \
+    curl -fsSL -o /opt/claude-seed/skills/playwright-cli/references/storage-state.md \
     https://raw.githubusercontent.com/microsoft/playwright-cli/main/skills/playwright-cli/references/storage-state.md && \
-    curl -fsSL -o /home/node/.claude/skills/playwright-cli/references/test-generation.md \
+    curl -fsSL -o /opt/claude-seed/skills/playwright-cli/references/test-generation.md \
     https://raw.githubusercontent.com/microsoft/playwright-cli/main/skills/playwright-cli/references/test-generation.md && \
-    curl -fsSL -o /home/node/.claude/skills/playwright-cli/references/tracing.md \
+    curl -fsSL -o /opt/claude-seed/skills/playwright-cli/references/tracing.md \
     https://raw.githubusercontent.com/microsoft/playwright-cli/main/skills/playwright-cli/references/tracing.md && \
-    curl -fsSL -o /home/node/.claude/skills/playwright-cli/references/video-recording.md \
-    https://raw.githubusercontent.com/microsoft/playwright-cli/main/skills/playwright-cli/references/video-recording.md
+    curl -fsSL -o /opt/claude-seed/skills/playwright-cli/references/video-recording.md \
+    https://raw.githubusercontent.com/microsoft/playwright-cli/main/skills/playwright-cli/references/video-recording.md && \
+    chown -R node:node /opt/claude-seed
 
 # 暴露 CLI
 COPY docker-entrypoint.sh /usr/local/bin/

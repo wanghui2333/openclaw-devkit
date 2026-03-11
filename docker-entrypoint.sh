@@ -41,6 +41,18 @@ if [ ! -f "$CONFIG_FILE" ]; then
     fi
 fi
 
+# 2.5 Ensure Claude Code Embedded Skills survive the host bind-mount
+# The host `~/.claude` might be an empty directory or missing the Playwright skills
+# mapped via docker-compose.yml. We re-inject them on every startup from the safe-zone over mount points.
+CLAUDE_DIR="/home/node/.claude"
+CLAUDE_SEED="/opt/claude-seed"
+if [ -d "$CLAUDE_SEED" ]; then
+    echo "--> Verifying Claude embedded skills integrity..."
+    run_as_node mkdir -p "$CLAUDE_DIR"
+    # Copy missing/updated skills from our staging layer into the live mount (-r for recursive, -n to not overwrite user edits if any)
+    run_as_node cp -Rn "$CLAUDE_SEED"/* "$CLAUDE_DIR/" 2>/dev/null || true
+fi
+
 # 3. Ensure Gateway safety & access for Docker
 # Run these as node to ensure generated metadata/temp files are owned correctly
 if [ -f "$CONFIG_FILE" ]; then

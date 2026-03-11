@@ -278,8 +278,7 @@ $(if $(filter office %office,$(1)),\
 	$(eval IMAGE_NAME := $(INITIAL_IMAGE_NAME)-office),\
 $(if $(filter java %java,$(1)),\
 	$(eval IMAGE_NAME := $(INITIAL_IMAGE_NAME)-java),\
-$(if $(filter dev %dev,$(1)),\
-	$(eval IMAGE_NAME := $(INITIAL_IMAGE_NAME)-dev))))
+$(eval IMAGE_NAME := $(INITIAL_IMAGE_NAME))))
 endef
 
 define do_build
@@ -291,8 +290,9 @@ else \
 	echo "==> 正在构建镜像: $(IMAGE_NAME)"; \
 	docker build \
 		-t $(IMAGE_NAME) \
-		-f $(if $(filter dev,$(1)),Dockerfile,Dockerfile.$(1)) \
-		$(DOCKER_BUILD_ARGS) .; \
+		-f $(if $(filter java,$(1)),Dockerfile.java,$(if $(filter office,$(1)),Dockerfile.office,Dockerfile)) \
+		$(DOCKER_BUILD_ARGS) \
+		.openclaw_src; \
 fi
 endef
 
