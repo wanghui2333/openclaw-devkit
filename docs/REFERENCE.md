@@ -15,6 +15,7 @@
 - [4. 多维版本一键切换](#4-版本一键切换) - Standard vs. Java vs. Office 精确规格表。
 - [5. 数据持久化深探](#5-深度解析数据挂载与持久化) - 理解 Host Bind vs. Named Volumes。
 - [6. Roles 与开发流调优](#6-roles-与开发流优化) - 基于软链接的 Git 工作流最佳实践。
+- [附：Slack 接入保姆级教程](slack-setup-beginner_zh.md) | [飞书 (Lark) 接入指南](#)
 
 ### 🔴 架构篇：底层逻辑与安全基座
 - [7. 分层编排解析](#7-底层逻辑分层编排架构) - 揭秘 `docker-compose.build.yml` 的动态注入。
@@ -102,6 +103,13 @@ make install java
 在多人协作或 Git 管理时，为了避免泄露私有 Token，我们推荐 **“软链接隔离法”**：
 1. 将 `roles` 目录设为项目的软链接：`ln -s ./my-private-roles ./roles`。
 2. 在 [`.gitignore`](.gitignore) 中忽略该链接或实际路径，确保架构公开、凭证隐藏。
+
+---
+
+## ⚡ 扩展：第三方通讯平台接入
+OpenClaw 支持通过 Socket Mode 接入多种办公平台。
+- **Slack (推荐)**：请参阅 [Slack 接入保姆级教程](slack-setup-beginner_zh.md)。
+- **飞书 (Lark)**：开发中，敬请期待。
 
 ---
 

@@ -15,6 +15,7 @@ This manual is the definitive technical specification and operational guide for 
 - [4. One-Click Flavor Switching](#4-one-click-version-switching) - Standard vs. Java vs. Office technical specs.
 - [5. Data Persistence Deep Dive](#5-deep-dive-data-mounting--persistence) - Understanding Host Binds vs. Named Volumes.
 - [6. Roles & Dev flow Optimization](#6-roles--dev-flow-optimization) - Git workflow best practices with symlinks.
+- [Appx: Slack Setup Beginner Guide](slack-setup-beginner_zh.md) | [Feishu (Lark) Guide](#)
 
 ### 🔴 Architect Tier: Core Logic & Security Foundation
 - [7. Layered Orchestration Analysis](#7-architecture-layered-orchestration) - The mechanics of `docker-compose.build.yml` dynamic injection.
@@ -102,6 +103,13 @@ To ensure AI containers are "non-volatile," we designed a dual-track persistence
 For team collaboration or Git management, we recommend the **"Symlink Isolation Method"**:
 1. Set the `roles` directory as a symbolic link to your project: `ln -s ./my-private-roles ./roles`.
 2. Add the actual path or the link to [`.gitignore`](.gitignore) to keep architectures public and credentials hidden.
+
+---
+
+## ⚡ Extension: Third-party Communication Platforms
+OpenClaw supports connecting to various office platforms via Socket Mode.
+- **Slack (Recommended)**: Refer to the [Slack Setup Beginner Guide](slack-setup-beginner_zh.md).
+- **Feishu (Lark)**: Development in progress, stay tuned.
 
 ---
 
