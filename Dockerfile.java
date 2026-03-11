@@ -19,10 +19,9 @@ USER root
 
 # 安装 OpenJDK 21 via Eclipse Temurin
 RUN echo 'Acquire::Retries "5";' > /etc/apt/apt.conf.d/80-retries && \
-    if [ "$APT_MIRROR" != "deb.debian.org" ]; then \
-    sed -i "s/deb.debian.org/$APT_MIRROR/g" /etc/apt/sources.list.d/debian.sources || \
-    sed -i "s/deb.debian.org/$APT_MIRROR/g" /etc/apt/sources.list; \
-    fi && \
+    # 修复可能损坏的 apt sources
+    rm -f /etc/apt/sources.list.d/debian.sources /etc/apt/sources.list 2>/dev/null || true && \
+    printf 'deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware\ndeb http://deb.debian.org/debian-security bookworm-security main contrib non-free\ndeb http://deb.debian.org/debian bookworm-updates main contrib non-free\n' > /etc/apt/sources.list && \
     apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends -o Acquire::Retries=3 \
     wget apt-transport-https gnupg && \
