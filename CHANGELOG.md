@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.3.1] - 2026-03-11
+
+### Added
+- **Go Variant Documentation**: Comprehensive tool comparison tables in `IMAGE_VARIANTS.md` with runtime, AI agents, Go tools, Python libs, and variant-specific recommended scenarios.
+- **Quick Selection Guide**: Added demand-to-variant mapping for easy selection (dev/go/java/office).
+
+### Improved
+- **Feishu Integration**: Merged community PR #10 with complete beginner guide in both Chinese and English, including WebSocket troubleshooting.
+- **Image Variants Architecture**: Updated 1+4 DRY architecture (dev/go/java/office) with detailed feature matrix.
+
+### Fixed
+- **Remote Cleanup**: Removed obsolete `miniceM` git remote.
+
 ## [v1.3.0] - 2026-03-11
 
 ### Added
