@@ -81,29 +81,34 @@ make onboard
 
 ### 2. 版本选择
 
-如果您需要特定环境，可以在安装时指定：
+根据您的开发需求选择合适的版本：
 
-| 版本 | 安装命令 | 说明 |
-| :--- | :--- | :--- |
-| **标准版** | `make install` | 默认版本 (Node + Python + Playwright) |
-| **Go 增强版** | `make install go`基础上集成 Go 1.26 + | 在标准版 常用工具 |
-| **Java 增强版** | `make install java` | 含 JDK 21 + Gradle + Maven |
-| **Office 旗舰版** | `make install office` | 专注 RAG 预处理：pandoc + LaTeX + OCR |
+| 版本 | 镜像标签 | 适用场景 | 核心工具 |
+| :--- | :--- | :--- | :--- |
+| **标准版** | `dev` | 通用 Web 开发 | Node.js 22, Python 3, pnpm, Bun, Playwright |
+| **Go 版** | `dev-go` | Go 后端开发 | 标准版 + Go 1.26, golangci-lint, gopls, dlv |
+| **Java 版** | `dev-java` | Java 后端开发 | 标准版 + JDK 21, Gradle, Maven |
+| **Office 版** | `dev-office` | 文档处理/RAG | 标准版 + pandoc, LaTeX, OCR 工具 |
 
-> [!IMPORTANT]
-> **首次安装后切换镜像**：无需重复运行 `make install`，只需修改 `.env` 文件中的 `OPENCLAW_IMAGE` 并重启：
-> ```bash
-> # 1. 修改 .env 中的镜像名称
-> #    openclaw-devkit:dev          (标准版)
-> #    openclaw-devkit:dev-go       (Go 版)
-> #    openclaw-devkit:dev-java     (Java 版)
-> #    openclaw-devkit:dev-office   (Office 版)
->
-> # 2. 拉取/构建新镜像并重启
-> make rebuild go        # 或 make build go && make restart
-> make rebuild java     # 或 make build java && make restart
-> make rebuild office   # 或 make build office && make restart
-> ```
+**安装指定版本：**
+
+```bash
+# 标准版 (默认)
+make install
+
+# Go 增强版
+make install go
+
+# Java 增强版
+make install java
+
+# Office 旗舰版
+make install office
+```
+
+**切换版本：** 首次安装后修改 `.env` 中的 `OPENCLAW_IMAGE`，然后执行 `make rebuild`
+
+可用的镜像标签：`dev`, `dev-go`, `dev-java`, `dev-office`
 
 ---
 

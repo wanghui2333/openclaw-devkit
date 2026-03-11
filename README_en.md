@@ -81,27 +81,34 @@ make onboard
 
 ### 2. Version Choice
 
-If you need a specific environment, specify it during installation:
+Choose the right version for your development needs:
 
-| Edition | Installation Command | Description |
-| :--- | :--- | :--- |
-| **Standard** | `make install` | Default version (Node.js + Go + Python + Playwright) |
-| **Go** | `make install go` | Standard + Go 1.26 + golangci-lint + Go tools (gopls, dlv, staticcheck) |
-| **Java** | `make install java` | Standard + JDK 21 + Gradle + Maven |
-| **Office** | `make install office` | Standard + LibreOffice + Tesseract OCR + PDF tools |
+| Edition | Image Tag | Use Case | Core Tools |
+| :--- | :--- | :--- | :--- |
+| **Standard** | `dev` | General web development | Node.js 22, Python 3, pnpm, Bun, Playwright |
+| **Go** | `dev-go` | Go backend development | Standard + Go 1.26, golangci-lint, gopls, dlv |
+| **Java** | `dev-java` | Java backend development | Standard + JDK 21, Gradle, Maven |
+| **Office** | `dev-office` | Document processing/RAG | Standard + pandoc, LaTeX, OCR tools |
 
-> [!IMPORTANT]
-> **Switching images after initial install**: No need to run `make install` again. Just modify `OPENCLAW_IMAGE` in `.env` and restart:
-> ```bash
-> # 1. Modify image name in .env
-> #    openclaw-devkit:dev        (Standard)
-> #    openclaw-devkit-go:dev     (Go)
-> #    openclaw-devkit-java:dev   (Java)
-> #    openclaw-devkit-office:dev (Office)
->
-> # 2. Pull/build new image and restart
-> make rebuild go    # or: make build go && make restart
-> ```
+**Install specific version:**
+
+```bash
+# Standard (default)
+make install
+
+# Go edition
+make install go
+
+# Java edition
+make install java
+
+# Office edition
+make install office
+```
+
+**Switch version:** After initial install, modify `OPENCLAW_IMAGE` in `.env`, then run `make rebuild`
+
+Available image tags: `dev`, `dev-go`, `dev-java`, `dev-office`
 
 ---
 
