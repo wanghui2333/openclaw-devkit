@@ -33,7 +33,7 @@
 ### General Requirements
 - **Docker**: V2 (Docker Desktop for macOS/Windows, Docker Engine for Linux)
 - **Docker Compose**: V2 (built into Docker Desktop)
-- **Make**: Pre-installed on macOS/Linux, Windows users need [Make for Windows](https://gnuwin32.sourceforge.net/packages/make.htm) or [Git Bash](https://git-scm.com/download/win)
+- **Make**: Pre-installed on macOS/Linux. Windows users are **strongly recommended** to install and use [Git Bash](https://git-scm.com/download/win) (Native Windows CLI tools may have compatibility issues)
 
 ### Windows-Specific Requirements
 

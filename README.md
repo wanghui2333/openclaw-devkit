@@ -33,7 +33,7 @@
 ### 通用要求
 - **Docker**: V2 (Docker Desktop for macOS/Windows, Docker Engine for Linux)
 - **Docker Compose**: V2 (内置于 Docker Desktop)
-- **Make**: macOS/Linux 自带，Windows 需安装 [Make for Windows](https://gnuwin32.sourceforge.net/packages/make.htm) 或使用 [Git Bash](https://git-scm.com/download/win)
+- **Make**: macOS/Linux 自带，Windows 用户**强烈推荐**安装并使用 [Git Bash](https://git-scm.com/download/win)（Windows 原生命令行存在兼容性问题）
 
 ### Windows 用户特殊要求
 
