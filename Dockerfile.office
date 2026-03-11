@@ -28,7 +28,7 @@ RUN apt-get update && \
     # Office 处理与 PDF 工具
     poppler-utils ghostscript imagemagick tesseract-ocr \
     tesseract-ocr-chi-sim tesseract-ocr-chi-tra fonts-wqy-zenhei \
-    # 2026 专家级: 高保真转换与高级 OCR
+    # 专家级: 高保真转换与高级 OCR
     libreoffice-writer-nogui libreoffice-calc-nogui ocrmypdf \
     fonts-noto-cjk fonts-noto-core && \
     apt-get clean && rm -rf /var/lib/apt/lists/*

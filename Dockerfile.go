@@ -5,7 +5,7 @@
 # 基于 openclaw:dev (Standard) 镜像构建
 # ============================================================
 ARG BASE_IMAGE=openclaw-devkit:dev
-ARG GO_VERSION=1.26.0
+ARG GO_VERSION=1.26.1
 ARG GOLANGCI_LINT_VERSION=1.64.8
 ARG APT_MIRROR=deb.debian.org
 

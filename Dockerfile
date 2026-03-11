@@ -29,7 +29,7 @@ FROM ${DOCKER_MIRROR}/library/debian:stable-slim AS builder
 
 # 定义所有构建参数 (确保每个阶段都能访问)
 ARG BUN_VERSION=1.3.10
-ARG GO_VERSION=1.26.0
+ARG GO_VERSION=1.26.1
 ARG GOLANGCI_LINT_VERSION=1.64.8
 ARG PYTHON_PACKAGES="python-pptx openpyxl python-docx beautifulsoup4 lxml pyyaml pandoc"
 ARG INSTALL_BROWSER=1
@@ -198,7 +198,7 @@ FROM ${DOCKER_MIRROR}/library/debian:stable-slim AS base
 
 # 定义所有构建参数
 ARG BUN_VERSION=1.3.10
-ARG GO_VERSION=1.26.0
+ARG GO_VERSION=1.26.1
 ARG PYTHON_PACKAGES="python-pptx openpyxl python-docx beautifulsoup4 lxml pyyaml pandoc"
 ARG APT_MIRROR=deb.debian.org
 ARG NPM_MIRROR=
