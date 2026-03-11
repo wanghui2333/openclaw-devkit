@@ -137,7 +137,7 @@ To enable **Socket Mode**, we need to generate an App Token.
 
 ## Step 4: Configure OpenClaw Environment Variables
 
-Fill the two "keys" you just obtained into the OpenClaw [`.env`](.env) file:
+Fill the two "keys" you just obtained into the OpenClaw `.env` file in the root directory. If this is your first time configuring, copy `.env.example` and rename it to `.env` first:
 
 ```env
 # Slack Bot Token (xoxb-...)
@@ -153,8 +153,11 @@ SLACK_APP_TOKEN=xapp-x-xxxxxxxxxxx-xxxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 1. **Save Configuration**: Ensure the `.env` file is saved.
 2. **Apply Configuration**:
-   - If OpenClaw is not running: `make up`
-   - If it is already running: `make restart` (This executes down and up again to reload environment variables)
+   - In your terminal, navigate to the OpenClaw root directory and restart the service using Docker Compose:
+     ```bash
+     docker compose down
+     docker compose up -d
+     ```
 3. **Invite Robot to Channel**:
    - In Slack, enter any channel and type `/invite @OpenClaw`.
 4. **Say Hello**:

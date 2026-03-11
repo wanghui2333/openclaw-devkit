@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.2.3] - 2026-03-11
+
+### Fixed
+- **Slack Setup Guide**: Fixed hallucinations and outdated manifest configurations in both English and Chinese beginner guides. Removed standalone `slack-manifest.json` as it's now integrated directly into the guides.
+- **Deployment Strategy**: Removed deprecated `DEPLOYMENT_STRATEGY.md` document.
+
 ## [v1.2.2] - 2026-03-11
 
 ### Fixed

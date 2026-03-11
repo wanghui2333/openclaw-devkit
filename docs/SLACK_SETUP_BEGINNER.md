@@ -22,53 +22,83 @@
 
 ```json
 {
-    "display_information": {
-        "name": "OpenClaw-Bot",
-        "description": "Powerful AI Agent driven by OpenClaw",
-        "background_color": "#000000"
-    },
-    "features": {
-        "app_home": {
-            "home_tab_enabled": true,
-            "messages_tab_enabled": true,
-            "messages_tab_read_only_enabled": false
+  "_metadata": {
+    "major_version": 2,
+    "minor_version": 1
+  },
+  "display_information": {
+    "name": "OpenClaw",
+    "long_description": "OpenClaw is an open-source AI coding assistant that provides intelligent code completion, refactoring, and debugging capabilities. It features deep understanding of code context, multi-language support, and seamless IDE integration. Perfect for developers seeking an alternative to proprietary AI coding tools with full data privacy and self-hosted deployment options.",
+    "description": "OpenClaw AI Assistant - Open-source Coding Partner",
+    "background_color": "#1e40af"
+  },
+  "features": {
+    "assistant_view": {
+      "assistant_description": "OpenClaw is an open-source AI coding assistant with intelligent code completion, refactoring, and debugging capabilities. It provides multi-language support, real-time suggestions, and self-hosted deployment for complete data privacy.",
+      "suggested_prompts": [
+        {
+          "title": "💡 Brainstorm",
+          "message": "In brainstorming mode, analyze the current project architecture, identify three areas for improvement, and explain the value and implementation approach"
         },
-        "bot_user": {
-            "display_name": "OpenClaw",
-            "always_online": true
+        {
+          "title": "📝 Create Issue",
+          "message": "Create a GitHub Issue using the project's defined Issue template, describing an important bug or feature request in the project"
+        },
+        {
+          "title": "🔀 Create PR",
+          "message": "Create a pull request based on current code changes using the project's defined PR template"
+        },
+        {
+          "title": "🔍 Code Review",
+          "message": "Conduct a comprehensive code review of the current branch, including DRY principles, SOLID principles, clean architecture, code quality, security vulnerabilities, and performance optimization"
         }
+      ]
     },
-    "oauth_config": {
-        "scopes": {
-            "bot": [
-                "chat:write",
-                "im:history",
-                "im:write",
-                "im:read",
-                "app_mentions:read",
-                "channels:history",
-                "groups:history",
-                "mpim:history"
-            ]
-        }
+    "app_home": {
+      "home_tab_enabled": false,
+      "messages_tab_enabled": true,
+      "messages_tab_read_only_enabled": false
     },
-    "settings": {
-        "event_subscriptions": {
-            "bot_events": [
-                "message.channels",
-                "message.groups",
-                "message.im",
-                "message.mpim",
-                "app_mention"
-            ]
-        },
-        "interactivity": {
-            "is_enabled": true
-        },
-        "org_deploy_enabled": false,
-        "socket_mode_enabled": true,
-        "token_rotation_enabled": false
+    "bot_user": {
+      "display_name": "OpenClaw",
+      "always_online": true
     }
+  },
+  "oauth_config": {
+    "scopes": {
+      "bot": [
+        "assistant:write",
+        "app_mentions:read",
+        "chat:write",
+        "chat:write.public",
+        "channels:read",
+        "groups:read",
+        "im:read",
+        "im:write",
+        "reactions:write",
+        "im:history",
+        "channels:history",
+        "groups:history",
+        "mpim:history",
+        "files:write",
+        "commands"
+      ]
+    }
+  },
+  "settings": {
+    "event_subscriptions": {
+      "bot_events": [
+        "app_mention",
+        "message.channels",
+        "message.groups",
+        "message.im",
+        "assistant_thread_started",
+        "assistant_thread_context_changed"
+      ]
+    },
+    "org_deploy_enabled": false,
+    "socket_mode_enabled": true
+  }
 }
 ```
 
@@ -107,7 +137,7 @@
 
 ## 第 4 步：配置 OpenClaw 环境变量
 
-将刚才拿到的两把“钥匙”填入 OpenClaw 的 [`.env`](.env) 文件中：
+将刚才拿到的两把“钥匙”填入 OpenClaw 根目录下的 `.env` 文件中。如果您是首次配置，请先复制 `.env.example` 文件并重命名为 `.env`：
 
 ```env
 # Slack Bot Token (xoxb-...)
@@ -121,7 +151,11 @@ SLACK_APP_TOKEN=xapp-x-xxxxxxxxxxx-xxxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 ## 第 5 步：启动并测试
 
-1. 确保 `.env` 已保存，重启 OpenClaw：`make restart`。
+1. 确保 `.env` 已保存。在终端进入 OpenClaw 根目录并重启服务：
+   ```bash
+   docker compose down
+   docker compose up -d
+   ```
 2. 在 Slack 中，进入任意频道，输入 `/invite @OpenClaw` 或直接在输入框提到 `@OpenClaw`。
 3. 对它说一句 `"Hi"`，如果它响应了你，说明接入成功！
 
