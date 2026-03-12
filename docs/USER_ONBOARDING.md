@@ -105,3 +105,60 @@ make verify    # 检查容器内工具链版本是否合规
 
 ### C. 启动与引导 (`make up` & `make onboard`)
 启动容器后，`make onboard` 会进入容器内部，通过交互式命令行引导您完成 API Key 的填报和通讯渠道的配对。
+
+## 5. 容器运行时架构 (Runtime Architecture)
+
+### 启动流程图
+
+```text
+make install / make up
+       │
+       ▼
+┌──────────────────────────────┐
+│  1. openclaw-init           │ ◄── 一次性容器
+│  • 执行 openclaw doctor     │     仅在首次或配置
+│    --fix 修复过时配置        │     问题时运行
+│  • 清理 contextPruning 等   │
+│    废弃字段                 │
+└──────────┬───────────────────┘
+           │ 完成后自动删除
+           ▼
+┌──────────────────────────────┐
+│  2. openclaw-gateway        │ ◄── 主服务 (常驻)
+│  • 健康检查通过后运行        │
+│  • 提供 Web UI (18789)      │
+│  • 提供 Bridge (18790)      │
+└──────────┬───────────────────┘
+           │ depends_on:
+           │   condition: service_healthy
+           ▼
+┌──────────────────────────────┐
+│  3. openclaw-cli           │ ◄── 按需启动
+│  • 仅在 make onboard /     │
+│    make cli 时运行          │
+│  • 交互式命令行界面         │
+└──────────────────────────────┘
+```
+
+### 配置迁移机制 (Config Migration)
+
+当用户从旧版本 OpenClaw 升级时，可能遇到配置文件 schema 不兼容问题（如 `contextPruning.windowSize` 字段已废弃）。
+
+**自动修复流程：**
+
+1. **Pre-start Init**: `openclaw-init` 容器在 gateway 启动前运行
+2. **Doctor Fix**: 执行 `openclaw doctor --fix` 自动修复已知问题
+3. **深度净化**: Node.js 脚本清理废弃字段（`contextPruning`, `compaction` 等）
+4. **Gateway 启动**: 配置修复完成后，gateway 才开始健康检查
+
+**故障排查：**
+- 如果启动失败，查看 init 日志：`docker logs openclaw-init`
+- 手动修复配置：`docker exec openclaw-gateway openclaw doctor --fix`
+
+### 数据持久化
+
+| 数据类型 | 存储位置 | 说明 |
+| :--- | :--- | :--- |
+| **配置文件** | `~/.openclaw/openclaw.json` | 宿主机目录，容器只读挂载 |
+| **会话数据** | Docker 卷 `openclaw-state` | 容器内持久化 |
+| **工作区** | `~/.openclaw/workspace` | 宿主机目录，双向同步 |
