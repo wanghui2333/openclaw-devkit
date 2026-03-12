@@ -6,14 +6,13 @@ ARG BASE_IMAGE=openclaw-runtime:base
 # ============================================================
 FROM ${BASE_IMAGE}
 
-ARG OPENCLAW_VERSION=latest
 ARG INSTALL_BROWSER=1
 
 ENV NODE_ENV=production
 ENV OPENCLAW_PREFER_PNPM=1
 
-# Install OpenClaw via official script
-RUN OPENCLAW_NO_ONBOARD=1 curl -fsSL https://openclaw.ai/install.sh | bash -s -- --version ${OPENCLAW_VERSION}
+# Install OpenClaw via npm
+RUN npm install -g openclaw@latest
 
 # Install Tier 3 Fast-Updating AI Agents
 # Positioned here so updating these tools doesn't trigger a rebuild of the entire app layer
