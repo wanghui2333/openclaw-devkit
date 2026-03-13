@@ -76,6 +76,14 @@ volumes:
   # Unified state storage for sessions, identities, and logs
   openclaw-state:
     name: openclaw-state
+  # Team skills storage (bind mount to host directory)
+  openclaw-team-skills:
+    name: openclaw-team-skills
+    driver: local
+    driver_opts:
+      type: none
+      device: ${OPENCLAW_TEAM_SKILLS_DIR}
+      o: bind
 
 services:
   # ============================================================================
@@ -91,9 +99,11 @@ services:
     command: ["sh", "-c", "echo '==> Pre-checking configuration...' && openclaw doctor --fix && echo '==> Configuration ready'"]
     volumes:
       # === 必需挂载 (Required) ===
-      # 使用 .env 中定义的变量 (OPENCLAW_CONFIG_DIR, OPENCLAW_CUSTOM_SKILLS_DIR)
+      # 使用 .env 中定义的变量 (OPENCLAW_CONFIG_DIR, OPENCLAW_CUSTOM_SKILLS_DIR, OPENCLAW_TEAM_SKILLS_DIR)
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw:rw
       - ${OPENCLAW_CUSTOM_SKILLS_DIR}:/home/node/skills/custom-skills:rw
+      # Team skills: named volume with bind mount target
+      - openclaw-team-skills:/home/node/skills/team-skills:rw
       - openclaw-state:/home/node/.openclaw-state:rw
     healthcheck:
       test: ["CMD", "sh", "-c", "test -f /home/node/.openclaw/openclaw.json"]
@@ -117,13 +127,15 @@ services:
     init: true
     volumes:
       # === 必需挂载 (Required) ===
-      # 使用 .env 中定义的变量 (OPENCLAW_CONFIG_DIR, OPENCLAW_WORKSPACE_DIR, OPENCLAW_CUSTOM_SKILLS_DIR)
+      # 使用 .env 中定义的变量 (OPENCLAW_CONFIG_DIR, OPENCLAW_WORKSPACE_DIR, OPENCLAW_CUSTOM_SKILLS_DIR, OPENCLAW_TEAM_SKILLS_DIR)
       # OpenClaw config seed (mount host dir to separate path)
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw-seed:ro
       # Workspace (AI working directory - required!)
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace:rw
       # Custom skills directory (user-defined skills)
       - ${OPENCLAW_CUSTOM_SKILLS_DIR}:/home/node/skills/custom-skills:rw
+      # Team skills: named volume with bind mount target
+      - openclaw-team-skills:/home/node/skills/team-skills:rw
       # Unified state volume for persistent container data
       - openclaw-state:/home/node/.openclaw:rw
       # Mount local entrypoint to apply fixes without rebuilding
@@ -183,9 +195,13 @@ services:
     init: true
     volumes:
       # === CLI 容器只需最基本的挂载 ===
-      # 使用 .env 中定义的变量 (OPENCLAW_CONFIG_DIR)
+      # 使用 .env 中定义的变量 (OPENCLAW_CONFIG_DIR, OPENCLAW_WORKSPACE_DIR, OPENCLAW_CUSTOM_SKILLS_DIR, OPENCLAW_TEAM_SKILLS_DIR)
       # OpenClaw config seed (mount host dir to separate path)
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw-seed:ro
+      # Custom skills directory (user-defined skills)
+      - ${OPENCLAW_CUSTOM_SKILLS_DIR}:/home/node/skills/custom-skills:rw
+      # Team skills: named volume with bind mount target
+      - openclaw-team-skills:/home/node/skills/team-skills:rw
       # Unified state volume for persistent container data
       - openclaw-state:/home/node/.openclaw:rw
     stdin_open: true
