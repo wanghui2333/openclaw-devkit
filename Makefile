@@ -43,15 +43,14 @@ export HOME := $(HOME_DIR)
 # Check shell environment on Windows
 ifeq ($(OS),Windows_NT)
     # Detect if we are in a POSIX-compatible shell (Git Bash, MSYS2, Cygwin, etc.)
-    # We check for MSYSTEM (MSYS/Git Bash) or BASH_VERSION
     ifeq ($(strip $(MSYSTEM)),)
         ifeq ($(strip $(BASH_VERSION)),)
             $(error $(shell echo 1>&2 " \
-                \n  [ WARNING ] 运行环境不受支持 (Detected CMD/PowerShell)\n \
-                \n  OpenClaw DevKit 需要 POSIX 兼容环境以保证工具链（如 printf/sed/grep）正常工作。\n \
-                \n  建议方案: 使用 'Git Bash' 运行此项目 (安装 Git for Windows 即可获得)。\n \
-                \n  下载地址: https://git-scm.com/download/win\n \
-                \n  注: 如果您确信当前环境已具备 POSIX 工具链，请在 Git Bash 或相应的 POSIX Shell 中运行。\n\n"))
+                \n  [ ERROR ]  Unsupported Shell Environment (CMD/PowerShell detected)\n \
+                \n  OpenClaw DevKit requires a POSIX environment to run correctly.\n \
+                \n  FIX: Please use 'Git Bash' (included with Git for Windows).\n \
+                \n  1. Download: https://git-scm.com/download/win\n \
+                \n  2. Launch 'Git Bash' in this directory and run 'make' again.\n\n"))
         endif
     endif
 endif
