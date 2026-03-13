@@ -283,6 +283,33 @@ logs-all: ## 查看所有容器日志
 shell: ## 进入 Gateway 容器
 	@docker compose exec openclaw-gateway bash
 
+dashboard: ## 🚀 一键直达仪表盘 (免配对直通链接)
+	@echo "$(INFO) 正在生成直通链接..."
+	@URL=$$(docker compose exec -T openclaw-gateway openclaw dashboard --no-open | grep "Dashboard URL:" | cut -d' ' -f3); \
+	if [ -n "$$URL" ]; then \
+		echo "$(SUCCESS) 仪表盘已就绪:"; \
+		echo "  $(BOLD)$(CYAN)$$URL$(NC)"; \
+		echo ""; \
+		echo "提示: 点击上方链接可直接进入，无需手动配对。"; \
+	else \
+		echo "$(ERROR) 无法获取 URL，请确保容器正在运行。"; \
+	fi
+
+devices: ## 列举所有配对设备及请求
+	@docker compose exec -T openclaw-gateway openclaw devices list
+
+approve: ## 🔐 一键批准最新的配对请求
+	@echo "$(INFO) 正在全自动识别待处理请求..."
+	@REQ_ID=$$(docker compose exec -T openclaw-gateway openclaw devices list --json | jq -r '.pending[0].requestId // empty'); \
+	if [ -n "$$REQ_ID" ]; then \
+		echo "$(INFO) 检测到请求 ID: $$REQ_ID"; \
+		docker compose exec -T openclaw-gateway openclaw devices approve "$$REQ_ID"; \
+		echo "$(SUCCESS) 已自动批准！现在请返回浏览器刷新页面。"; \
+	else \
+		echo "$(WARN) 未发现待处理请求。"; \
+		echo "提示: 请先在浏览器访问 http://127.0.0.1:$(GATEWAY_PORT)/ 触发配对提示。"; \
+	fi
+
 verify: ## 验证镜像工具版本 (最佳实践检查)
 	@echo "$(INFO) 验证目标镜像: $(BOLD)$(YELLOW)$(IMAGE_NAME)$(NC)"
 	@docker run --rm $(IMAGE_NAME) node -v | grep -q "v22" && echo "$(SUCCESS) Node.js v22 (LTS) OK" || echo "$(ERROR) Node.js version mismatch"
