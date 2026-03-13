@@ -180,7 +180,7 @@ up: ## 启动服务
 
 onboard: ## 启动交互式引导程序
 	@$(UTF8_FIX) echo "$(INFO) 启动交互式引导程序..."
-	@$(UTF8_FIX) docker compose run --rm -it openclaw-cli onboard
+	@$(UTF8_FIX) docker compose run --rm -it openclaw-cli openclaw onboard
 
 down: ## 停止服务
 	@docker compose down
