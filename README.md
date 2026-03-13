@@ -60,18 +60,15 @@
 适用于大多数用户，直接从 GitHub 注册表拉取经过优化的预构建镜像，**无需本地编译**。
 
 ```bash
-# 1. 克隆项目
-git clone https://github.com/hrygo/openclaw-devkit.git
-cd openclaw-devkit
-
-# 2. 一键安装并初始化 (极速模式)
+# 1. 下载并安装 (极速模式)
+git clone https://github.com/hrygo/openclaw-devkit.git && cd openclaw-devkit
 make install
 
-# 3. 首次配置（必做）
+# 2. 交互式配置 (初次使用)
 make onboard
 
-# 4. 访问 Web UI
-# 浏览器打开 http://127.0.0.1:18789
+# 3. 开启全人工直联 (推荐)
+make dashboard
 ```
 
 > [!NOTE]

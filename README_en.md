@@ -60,18 +60,15 @@
 Suitable for most users, pulls optimized pre-built images from the GitHub Registry—**no local compilation required**.
 
 ```bash
-# 1. Clone project
-git clone https://github.com/hrygo/openclaw-devkit.git
-cd openclaw-devkit
-
-# 2. One-click install & initialize (Fast Mode)
+# 1. Download & Install (Fast Mode)
+git clone https://github.com/hrygo/openclaw-devkit.git && cd openclaw-devkit
 make install
 
-# 3. First-time setup (Required)
+# 2. Interactive Setup (First-time)
 make onboard
 
-# 4. Access Web UI
-# Open http://127.0.0.1:18789 in browser
+# 3. Direct Access (Recommended)
+make dashboard
 ```
 
 > [!NOTE]
