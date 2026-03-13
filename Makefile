@@ -80,6 +80,20 @@ ERROR   := $(RED)$(BOLD)✖$(NC)
 -include .env
 
 # ============================================================
+# 环境变量自动导出 (Ensure Docker Compose receives variables)
+# ============================================================
+export OPENCLAW_IMAGE
+export OPENCLAW_CONFIG_DIR
+export OPENCLAW_WORKSPACE_DIR
+export OPENCLAW_GATEWAY_PORT
+export OPENCLAW_BRIDGE_PORT
+export OPENCLAW_GATEWAY_TOKEN
+export HTTP_PROXY
+export HTTPS_PROXY
+export ANTHROPIC_AUTH_TOKEN
+export ANTHROPIC_BASE_URL
+
+# ============================================================
 # 变量定义
 # ============================================================
 

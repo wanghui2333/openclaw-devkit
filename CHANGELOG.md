@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.6.0] - 2026-03-13
+
+### Fixed
+- **Build System**: Resolved issue where environment variables from `.env` were not propagated to `docker compose` in MINGW64/Windows environments. Added explicit `export` statements in `Makefile` for all critical configuration variables.
+
 ## [v1.5.9] - 2026-03-13
 
 ### Optimized
