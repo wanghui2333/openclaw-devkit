@@ -53,6 +53,11 @@ if [ -f "$CONFIG_FILE" ]; then
                 console.log('--> Cleaning agents.defaults.compaction...');
                 delete config.agents.defaults.compaction;
             }
+            // 确保 Gateway 绑定到 Lan (0.0.0.0)
+            if (config.gateway) {
+                console.log('--> Forcing gateway.bind to all...');
+                config.gateway.bind = 'all';
+            }
             fs.writeFileSync(path, JSON.stringify(config, null, 2));
         } catch (e) {
             console.error('Warning: Configuration surgery failed: ' + e.message);
@@ -106,7 +111,7 @@ fi
 # Run these as node to ensure generated metadata/temp files are owned correctly
 # Always set these values to ensure consistency across restarts and upgrades
 run_as_node openclaw config set gateway.mode local --strict-json >/dev/null 2>&1 || true
-run_as_node openclaw config set gateway.bind lan --strict-json >/dev/null 2>&1 || true
+run_as_node openclaw config set gateway.bind all --strict-json >/dev/null 2>&1 || true
 run_as_node openclaw config set gateway.controlUi.allowedOrigins "${OPENCLAW_ALLOWED_ORIGINS:-[\"http://127.0.0.1:18789\", \"http://localhost:18789\", \"http://0.0.0.0:18789\"]}" --strict-json >/dev/null 2>&1 || true
 
 # 4. Execute CMD
