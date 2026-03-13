@@ -46,8 +46,10 @@
 
 ### 2.1 找到配置文件
 
+**本机部署用户：**
+
 **Mac 用户：**
-打开终端，，运行：
+打开终端，运行：
 ```bash
 open ~/.openclaw/
 ```
@@ -57,17 +59,57 @@ open ~/.openclaw/
 2. 输入：`%USERPROFILE%\.openclaw`
 3. 按回车
 
+**Docker 容器部署用户：**
+
+在 openclaw-devkit 项目目录下，运行以下命令进入容器：
+```bash
+make shell
+```
+
+然后在容器内打开配置目录：
+```bash
+cd ~/.openclaw/
+ls -la
+```
+
 ### 2.2 备份配置文件
 
+**本机部署用户：**
 1. 找到 `openclaw.json` 文件
 2. 复制一份，重命名为 `openclaw.json.backup`
+
+**Docker 容器部署用户：**
+```bash
+# 进入容器后执行
+cp ~/.openclaw/openclaw.json ~/.openclaw/openclaw.json.backup
+```
 
 ### 2.3 编辑配置文件
 
 使用文本编辑器打开 `openclaw.json`：
 
-**Mac 用户：** 用 VS Code、TextEdit 或其他文本编辑器
-**Windows 用户：** 用 VS Code、Notepad++ 或记事本
+**本机部署用户：**
+- Mac：用 VS Code、TextEdit 或其他文本编辑器
+- Windows：用 VS Code、Notepad++ 或记事本
+
+**Docker 容器部署用户：**
+```bash
+# 退出容器（如果已进入）
+exit
+
+# 在宿主机编辑配置文件（推荐）
+# 容器内的 ~/.openclaw/ 目录挂载到宿主机的 ~/.openclaw/
+# 所以可以直接在宿主机编辑
+
+# Mac 用户
+open ~/.openclaw/openclaw.json
+
+# Linux 用户
+nano ~/.openclaw/openclaw.json
+
+# Windows 用户
+# 使用记事本或 VS Code 打开 %USERPROFILE%\.openclaw\openclaw.json
+```
 
 ### 2.4 添加飞书配置
 
@@ -212,9 +254,25 @@ open ~/.openclaw/
 
 ### 7.1 重启 OpenClaw
 
+**本机部署用户：**
+
 打开终端，运行：
 ```bash
 openclaw gateway restart
+```
+
+等待几秒钟，OpenClaw 会重新启动。
+
+**Docker 容器部署用户：**
+
+在 openclaw-devkit 项目目录下，运行以下命令重启服务：
+```bash
+make restart
+```
+
+或使用容器内命令：
+```bash
+make cli CMD="gateway restart"
 ```
 
 等待几秒钟，OpenClaw 会重新启动。
@@ -247,6 +305,8 @@ openclaw gateway restart
 
 **解决方法：**
 
+**本机部署用户：**
+
 1. 检查 OpenClaw 是否运行：
    ```bash
    openclaw status
@@ -262,13 +322,39 @@ openclaw gateway restart
    openclaw gateway restart
    ```
 
+**Docker 容器部署用户：**
+
+1. 检查服务状态：
+   ```bash
+   make status
+   ```
+
+2. 查看 Gateway 日志：
+   ```bash
+   make logs
+   ```
+
+3. 重启服务：
+   ```bash
+   make restart
+   ```
+
 ### 问题：配置文件格式错误
 
 **解决方法：**
 
 1. 恢复备份配置：
+
+   **本机部署用户：**
    - 使用 `openclaw.json.backup`
    - 重新复制到 `openclaw.json`
+
+   **Docker 容器部署用户：**
+   ```bash
+   # 在宿主机执行
+   cp ~/.openclaw/openclaw.json.backup ~/.openclaw/openclaw.json
+   make restart
+   ```
 
 2. 检查 JSON 格式：
    - 访问：https://jsonlint.com
@@ -291,6 +377,33 @@ openclaw gateway restart
    - 在飞书开放平台重新生成
    - 更新配置文件
    - 重启 OpenClaw
+
+   **Docker 容器部署用户：**
+   ```bash
+   # 更新配置后重启
+   make restart
+   ```
+
+### 问题：Docker 容器内无法修改配置文件
+
+**解决方法：**
+
+容器内的 `~/.openclaw/` 目录已挂载到宿主机的 `~/.openclaw/`，建议直接在宿主机编辑：
+
+1. **Mac 用户：**
+   ```bash
+   open ~/.openclaw/openclaw.json
+   ```
+
+2. **Linux 用户：**
+   ```bash
+   nano ~/.openclaw/openclaw.json
+   ```
+
+3. **Windows 用户：**
+   - 使用记事本或 VS Code 打开 `%USERPROFILE%\.openclaw\openclaw.json`
+
+编辑完成后，在项目目录下执行 `make restart` 使配置生效。
 
 ---
 
