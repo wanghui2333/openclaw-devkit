@@ -19,6 +19,7 @@ env:
   REGISTRY: ghcr.io
   # Use lower case for image names to satisfy GHCR requirements
   IMAGE_BASE: openclaw-runtime
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   prepare:

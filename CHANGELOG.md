@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.5.9] - 2026-03-13
+
+### Optimized
+- **CI/CD Configuration**: Opted into the Node.js 24 runtime for JavaScript-based GitHub Actions by setting `FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true`, resolving deprecation warnings for Node.js 20 and future-proofing the build pipeline.
+
 ## [v1.5.8] - 2026-03-13
 
 ### Optimized
