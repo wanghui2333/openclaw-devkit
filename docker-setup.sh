@@ -23,6 +23,8 @@ IMAGE_NAME="${OPENCLAW_IMAGE:-openclaw-devkit}"
 IS_WINDOWS=false
 if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
   IS_WINDOWS=true
+  # Force UTF-8 encoding for Windows terminals to prevent garbled Chinese characters
+  chcp.com 65001 > /dev/null 2>&1
 fi
 
 # Self-Healing: Fix CRLF line endings in docker-entrypoint.sh if on Windows
