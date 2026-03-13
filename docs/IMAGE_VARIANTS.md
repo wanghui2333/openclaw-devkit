@@ -1,6 +1,6 @@
 # 镜像变体对比指南
 
-采用 **1+4 DRY 架构**，所有变体共享基座镜像。
+1+4 DRY 架构，所有变体共享基座镜像。
 
 ---
 
@@ -44,11 +44,11 @@ openclaw-runtime:base
 
 Claude Code | OpenCode | Pi-Mono | uv | Playwright | GitHub CLI
 
-### 3.3 Go 工具链（go 版）
+### 3.3 Go 工具链
 
 golangci-lint | gopls | dlv | staticcheck | gosec | air | mockgen
 
-### 3.4 办公工具（office 版）
+### 3.4 办公工具
 
 LibreOffice | OCRmyPDF | Tesseract | Docling | Marker-PDF | pandas | polars
 
@@ -74,7 +74,7 @@ make install go
 make install java
 make install office
 
-# 切换与强制更新
+# 切换与更新
 make rebuild go        # 检测并拉取最新镜像，重启容器
 make build java        # 仅构建（若本地已有镜像则跳过构建直接下载或基于缓存）
 ```
