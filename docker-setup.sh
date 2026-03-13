@@ -25,6 +25,10 @@ if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; t
   IS_WINDOWS=true
 fi
 
+# COMPOSE_FILE is managed by .env for flexibility
+# EXTRA_COMPOSE_FILE still used for on-the-fly mounts
+EXTRA_COMPOSE_FILE="$ROOT_DIR/docker-compose.dev.extra.yml"
+
 # ============================================================
 # Visual Styling (Whitepaper Grade)
 # ============================================================
