@@ -90,8 +90,10 @@ services:
     # Run before gateway to fix config issues (unhealthy from old schema)
     command: ["sh", "-c", "echo '==> Pre-checking configuration...' && openclaw doctor --fix && echo '==> Configuration ready'"]
     volumes:
-      # Mount config as rw so we can fix it
+      # === 必需挂载 (Required) ===
+      # 使用 .env 中定义的变量 (OPENCLAW_CONFIG_DIR, OPENCLAW_CUSTOM_SKILLS_DIR)
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw:rw
+      - ${OPENCLAW_CUSTOM_SKILLS_DIR}:/home/node/skills/custom-skills:rw
       - openclaw-state:/home/node/.openclaw-state:rw
     healthcheck:
       test: ["CMD", "sh", "-c", "test -f /home/node/.openclaw/openclaw.json"]
@@ -115,11 +117,13 @@ services:
     init: true
     volumes:
       # === 必需挂载 (Required) ===
-      # 使用 .env 中定义的变量 (OPENCLAW_CONFIG_DIR, OPENCLAW_WORKSPACE_DIR)
+      # 使用 .env 中定义的变量 (OPENCLAW_CONFIG_DIR, OPENCLAW_WORKSPACE_DIR, OPENCLAW_CUSTOM_SKILLS_DIR)
       # OpenClaw config seed (mount host dir to separate path)
       - ${OPENCLAW_CONFIG_DIR}:/home/node/.openclaw-seed:ro
       # Workspace (AI working directory - required!)
       - ${OPENCLAW_WORKSPACE_DIR}:/home/node/.openclaw/workspace:rw
+      # Custom skills directory (user-defined skills)
+      - ${OPENCLAW_CUSTOM_SKILLS_DIR}:/home/node/skills/custom-skills:rw
       # Unified state volume for persistent container data
       - openclaw-state:/home/node/.openclaw:rw
       # Mount local entrypoint to apply fixes without rebuilding
