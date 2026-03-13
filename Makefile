@@ -40,16 +40,18 @@ endif
 # Export HOME for docker compose visibility on Windows
 export HOME := $(HOME_DIR)
 
-# Encoding Fix for Windows (Terminal UTF-8)
+# Portability Helpers
 ifeq ($(PLATFORM),Windows)
+    NOP := cd .
     UTF8_FIX := chcp 65001 >nul 2>&1 &&
+    MKDIR := mkdir
+    RM    := del /q /s
 else
+    NOP := true
     UTF8_FIX :=
+    MKDIR := mkdir -p
+    RM    := rm -rf
 endif
-
-# Common Commands (Platform Neutral)
-MKDIR := mkdir -p
-RM    := rm -rf
 
 # ANSI Colors (Calculated for portability)
 ifeq ($(PLATFORM),Windows)
@@ -166,10 +168,10 @@ dev: ## 内部: 选择标准版
 # ============================================================
 
 install: ## 首次安装/初始化环境
-	@$(UTF8_FIX) $(if $(filter Unix,$(PLATFORM)),chmod +x "$(SETUP_SCRIPT)",:)
-	@$(UTF8_FIX) $(call select_image,$(MAKECMDGOALS)) :
+	@$(UTF8_FIX) $(if $(filter Unix,$(PLATFORM)),chmod +x "$(SETUP_SCRIPT)",$(NOP))
+	@$(UTF8_FIX) $(call select_image,$(MAKECMDGOALS)) $(NOP)
 	@$(UTF8_FIX) echo "$(INFO) 目标环境: $(BOLD)$(YELLOW)$(IMAGE_NAME)$(NC)"
-	@$(UTF8_FIX) OPENCLAW_IMAGE="$(IMAGE_NAME)" bash "$(SETUP_SCRIPT)"
+	@$(UTF8_FIX) OPENCLAW_IMAGE="$(IMAGE_NAME)" sh "$(SETUP_SCRIPT)"
 	@$(UTF8_FIX) echo "$(SUCCESS) $(GREEN)环境安装完毕!$(NC)"
 	@$(UTF8_FIX) echo "  $(INFO) 提示: 首次安装后，请执行 $(BOLD)make onboard$(NC) 以交互式引导配置 LLM 与 聊天应用。"
 
