@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.6.2] - 2026-03-13
+
+### Optimized
+- **Docker Orchestration**: Consolidated `openclaw-init` logic into the main entrypoint to reduce container clutter and dependency chain.
+- **Windows Reliability**: Significantly relaxed Docker healthcheck parameters (longer `start_period`, more `retries`) to accommodate slow IO performance on Windows/WSL2 systems.
+- **Self-Healing**: Changed configuration seed mount to `rw` and integrated `openclaw doctor --fix` into the primary startup flow for more robust automatic configuration repair.
+
 ## [v1.6.1] - 2026-03-13
 
 ### Fixed

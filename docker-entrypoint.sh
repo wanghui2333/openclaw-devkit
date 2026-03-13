@@ -17,12 +17,18 @@ run_as_node() {
     fi
 }
 
-# 1. Optimize File Access (if running as root)
-# Windows users: Permission warnings can be safely ignored on host mounts.
 if [ "$(id -u)" = "0" ]; then
     echo "--> Optimizing file access policy for $CONFIG_DIR..."
-    chown -R node:node "$CONFIG_DIR" 2>/dev/null || true
+    chown -R node:node -- "$CONFIG_DIR" 2>/dev/null || true
+    # Also ensure seed directory is writable if we want to fix host config
+    if [ -d "$SEED_DIR" ]; then
+        chown -R node:node -- "$SEED_DIR" 2>/dev/null || true
+    fi
 fi
+
+# 1.8 Direct Initialization Check (Consolidated from openclaw-init)
+echo "--> Pre-checking configuration health..."
+run_as_node openclaw doctor --fix >/dev/null 2>&1 || true
 
 # 1.5 Surgical Config Repair (Resilience)
 # 针对配置文件版本过旧导致的局部 Schema 崩溃（如：windowSize, contextPruning 等）
