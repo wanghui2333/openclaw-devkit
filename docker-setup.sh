@@ -1,7 +1,11 @@
-# Hard Check: Ensure we are running in Bash (especially for Windows users)
+# Hard Check: Ensure we are running in Bash
 if [ -z "$BASH_VERSION" ]; then
-  echo "Error: This script REQUIRES Bash."
-  [ "$OSTYPE" = "msys" ] && echo "Hint: Please run this in 'Git Bash' instead of CMD/PowerShell."
+  echo "Error: This script requires a Bash-compatible shell."
+  case "$OSTYPE" in
+    msys*|cygwin*|win32*) 
+      echo "Recommendation: Please use 'Git Bash' (included with Git for Windows) or another POSIX environment."
+      ;;
+  esac
   exit 1
 fi
 
