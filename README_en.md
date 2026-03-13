@@ -19,11 +19,11 @@
 ## ✨ Key Features
 
 - 📦 **One-Click Ready**: Based on Docker Compose, no more messy dependency installation
+- 🧩 **1+3 Tier Architecture**: Efficient "1 base + 3 stacks" design,极致 DRY
 - 🧠 **AI-Native Integration**: Built-in Claude Code, OpenCode, Pi-Mono
 - 🔧 **Out-of-the-Box**: Pre-configured development environment, no manual setup needed
 - 🚀 **Rapid Startup**: One-click deployment, start the full development stack in seconds
 - 🔒 **Secure Isolation**: Containerized execution, secure and controllable environment isolation
-- 📱 **Multi-Platform**: Support for macOS, Windows, and Linux
 - 💾 **Data Persistence**: Sessions and configs auto-saved, survive restarts
 
 ---
@@ -75,9 +75,7 @@ make dashboard
 > `make install` automates: directory creation, `.env` config generation, image synchronization, and fixing host permissions.
 > **Note**: To ensure installation speed, `make install` prioritizes existing local images. **If this is not your first installation, it is recommended to run `make rebuild` to pull the latest image version.**
 
----
-
-### 2. Version Choice
+### Version Choice
 
 Choose the right version for your development needs:
 
@@ -88,51 +86,26 @@ Choose the right version for your development needs:
 | **Java** | `java` | Java backend development | Standard + JDK 21, Gradle, Maven |
 | **Office** | `office` | Document processing/RAG | Standard + LibreOffice, pandoc, LaTeX, Docling, Marker-PDF |
 
-**Install specific version:**
-
 ```bash
-# Standard (default)
-make install
-
-# Go edition
+# Install specific version
 make install go
-
-# Java edition
 make install java
-
-# Office edition
 make install office
 ```
 
-**Switch version:** After initial install, modify `OPENCLAW_IMAGE` in `.env`, then run `make rebuild`
+After initial install, modify `OPENCLAW_IMAGE` in `.env`, then run `make rebuild` to switch versions.
 
-Available image tags: `latest`, `go`, `java`, `office`
+### Daily Operations
 
----
-
-### After Startup
-
-| Step        | Command                                          | Description                                 |
-| :---------- | :----------------------------------------------- | :------------------------------------------ |
-| 1️⃣ Start     | `make up`                                        | Start container services                    |
-| 2️⃣ Configure | `make onboard`                                   | Interactive setup for LLM, Feishu, channels |
-| 3️⃣ Access    | `make dashboard` | **🚀 One-click authenticated access** |
-| 4️⃣ Pair      | `make approve`    | Auto-approve Web UI pairing requests|
-
----
-
-## 🛠️ Common Commands
-
-| Command            | Description              |
-| :----------------- | :----------------------- |
-| `make up` / `down` | Start / Stop services    |
-| `make restart`    | Restart services (down + up) |
-| `make onboard`     | Interactive setup wizard (LLM, Feishu, Slack) |
-| `make status`      | View runtime status      |
-| `make logs`        | View real-time logs      |
-| `make shell`       | Enter container shell    |
-
-> 📖 Complete command reference → [Detailed Reference Manual](./docs/REFERENCE.md)
+| Scenario | Command |
+| :--- | :--- |
+| Start services | `make up` |
+| Stop services | `make down` |
+| Restart services | `make restart` |
+| View status | `make status` |
+| View logs | `make logs` |
+| Enter container | `make shell` |
+| Force update image | `make rebuild` |
 
 ---
 
@@ -156,15 +129,15 @@ Or manually execute `docker pull ghcr.io/hrygo/openclaw-devkit:latest`.
 
 <details>
 <summary><b>Q: How to switch versions?</b></summary>
-...
+
+Modify `OPENCLAW_IMAGE` in `.env`, then execute `make rebuild <variant>`.
+</details>
 
 <details>
 <summary><b>Q: Where are config files?</b></summary>
 
 In container at `~/.openclaw/`, persisted on host via `openclaw-state` volume.
 </details>
-
----
 
 ---
 

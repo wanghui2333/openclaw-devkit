@@ -75,9 +75,7 @@ make dashboard
 > `make install` 会自动完成：创建数据目录、生成 `.env` 配置、同步镜像以及修复宿主机权限。
 > **注意**：为了保证安装速度，`make install` 优先使用本地已有的镜像。**如果您不是首次安装，建议执行 `make rebuild` 以拉取最新镜像版本。**
 
----
-
-### 2. 版本选择
+### 版本选择
 
 根据您的开发需求选择合适的版本：
 
@@ -88,51 +86,26 @@ make dashboard
 | **Java 版** | `java` | Java 后端开发 | 标准版 + JDK 21, Gradle, Maven |
 | **Office 版** | `office` | 文档处理/RAG | 标准版 + LibreOffice, pandoc, LaTeX, Docling, Marker-PDF |
 
-**安装指定版本：**
-
 ```bash
-# 标准版 (默认)
-make install
-
-# Go 增强版
+# 安装指定版本
 make install go
-
-# Java 增强版
 make install java
-
-# Office 旗舰版
 make install office
 ```
 
-**切换版本：** 首次安装后修改 `.env` 中的 `OPENCLAW_IMAGE`，然后执行 `make rebuild`
+首次安装后修改 `.env` 中的 `OPENCLAW_IMAGE`，然后执行 `make rebuild` 切换版本。
 
-可用的镜像标签：`latest`, `go`, `java`, `office`
+### 日常运维
 
----
-
-### 启动后的操作
-
-| 步骤 | 命令 | 说明 |
-| :--- | :--- | :--- |
-| 1️⃣ 启动 | `make up` | 启动容器服务 |
-| 2️⃣ 配置 | `make onboard` | 交互式配置 LLM、飞书、频道等 |
-| 3️⃣ 访问 | `make dashboard` | **🚀 一键免密直通仪表盘** |
-| 4️⃣ 配对 | `make approve` | 自动批准 Web UI 的配对请求 |
-
----
-
-## 🛠️ 常用指令
-
-| 指令 | 描述 |
+| 场景 | 命令 |
 | :--- | :--- |
-| `make up` / `down` | 启动 / 停止服务 |
-| `make restart` | 重启服务 (down + up) |
-| `make onboard` | 交互式配置向导 (LLM、飞书、Slack 等) |
-| `make status` | 查看运行状态 |
-| `make logs` | 查看实时日志 |
-| `make shell` | 进入容器 Shell |
-
-> 📖 更完整的命令说明 → [详细参考手册](./docs/REFERENCE.md)
+| 启动服务 | `make up` |
+| 停止服务 | `make down` |
+| 重启服务 | `make restart` |
+| 查看状态 | `make status` |
+| 查看日志 | `make logs` |
+| 进入容器 | `make shell` |
+| 强制更新镜像 | `make rebuild` |
 
 ---
 
@@ -156,15 +129,15 @@ make rebuild
 
 <details>
 <summary><b>Q: 如何切换版本？</b></summary>
-...
+
+修改 `.env` 中的 `OPENCLAW_IMAGE`，然后执行 `make rebuild <variant>`。
+</details>
 
 <details>
 <summary><b>Q: 配置文件在哪？</b></summary>
 
 容器内 `~/.openclaw/`，宿主机通过 `openclaw-state` 卷持久化。
 </details>
-
----
 
 ---
 
