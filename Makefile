@@ -23,14 +23,43 @@
 # Visual Styling (Whitepaper Grade)
 # ============================================================
 
+# Detect OS
+ifeq ($(OS),Windows_NT)
+    PLATFORM := Windows
+else
+    PLATFORM := Unix
+endif
+
+# Determine Home Directory
+ifeq ($(PLATFORM),Windows)
+    HOME_DIR := $(USERPROFILE)
+else
+    HOME_DIR := $(HOME)
+endif
+
+# Common Commands (Platform Neutral)
+MKDIR := mkdir -p
+RM    := rm -rf
+
 # ANSI Colors (Calculated for portability)
-RED    := $(shell printf '\033[0;31m')
-GREEN  := $(shell printf '\033[0;32m')
-YELLOW := $(shell printf '\033[1;33m')
-BLUE   := $(shell printf '\033[0;34m')
-CYAN   := $(shell printf '\033[0;36m')
-BOLD   := $(shell printf '\033[1m')
-NC     := $(shell printf '\033[0m') # No Color
+ifeq ($(PLATFORM),Windows)
+    # Windows cmd.exe fallbacks
+    RED    :=
+    GREEN  :=
+    YELLOW :=
+    BLUE   :=
+    CYAN   :=
+    BOLD   :=
+    NC     :=
+else
+    RED    := $(shell printf '\033[0;31m')
+    GREEN  := $(shell printf '\033[0;32m')
+    YELLOW := $(shell printf '\033[1;33m')
+    BLUE   := $(shell printf '\033[0;34m')
+    CYAN   := $(shell printf '\033[0;36m')
+    BOLD   := $(shell printf '\033[1m')
+    NC     := $(shell printf '\033[0m') # No Color
+endif
 
 # Output Prefixes
 INFO    := $(BLUE)$(BOLD)==>$(NC)
@@ -127,10 +156,10 @@ dev: ## 内部: 选择标准版
 # ============================================================
 
 install: ## 首次安装/初始化环境
-	@chmod +x $(SETUP_SCRIPT)
+	@$(if $(filter Unix,$(PLATFORM)),chmod +x $(SETUP_SCRIPT),)
 	@$(call select_image,$(MAKECMDGOALS))
 	@echo "$(INFO) 目标环境: $(BOLD)$(YELLOW)$(IMAGE_NAME)$(NC)"
-	@OPENCLAW_IMAGE=$(IMAGE_NAME) ./$(SETUP_SCRIPT)
+	@OPENCLAW_IMAGE=$(IMAGE_NAME) sh $(SETUP_SCRIPT)
 	@echo "$(SUCCESS) $(GREEN)环境安装完毕!$(NC)"
 	@echo "  $(INFO) 提示: 首次安装后，请执行 $(BOLD)make onboard$(NC) 以交互式引导配置 LLM 与 聊天应用。"
 
@@ -208,11 +237,10 @@ clean: ## 清理容器和悬空镜像
 
 clean-volumes: ## 清理所有数据卷
 	@echo "$(WARN)  确认清理所有数据卷? 按 Enter 确认, Ctrl+C 取消"
-	@read confirm
-	@docker compose down -v
-	@docker volume rm openclaw-node-modules openclaw-go-mod \
+	@sh -c 'read confirm && docker compose down -v && \
+		docker volume rm openclaw-node-modules openclaw-go-mod \
 		openclaw-playwright-cache openclaw-playwright-bin \
-		openclaw-state 2>/dev/null || true
+		openclaw-state 2>/dev/null || true'
 	@echo "✓ 数据卷已清理"
 
 # ============================================================
@@ -255,41 +283,41 @@ test-proxy: ## 测试代理连接
 # 备份与恢复
 # ============================================================
 
-BACKUP_DIR := ~/.openclaw-backups
+BACKUP_DIR := $(HOME_DIR)/.openclaw-backups
 
 backup-config: ## 备份配置
-	@mkdir -p $(BACKUP_DIR)
-	@TIM=$$(date +%Y%m%d-%H%M%S)
-	@tar -czf $(BACKUP_DIR)/main-agent-$$TIM.tar.gz -C $(HOME)/.openclaw/agents/main/agent . 2>/dev/null && echo "✓ main" || echo "⚠ main (无)"
-	@tar -czf $(BACKUP_DIR)/codex-agent-$$TIM.tar.gz -C $(HOME)/.openclaw/agents/codex/agent . 2>/dev/null && echo "✓ codex" || echo "⚠ codex (无)"
-	@cp $(HOME)/.openclaw/openclaw.json $(BACKUP_DIR)/openclaw-$$TIM.json 2>/dev/null && echo "✓ config" || echo "⚠ config (无)"
+	@$(MKDIR) $(BACKUP_DIR)
+	@sh -c 'TIM=$$(date +%Y%m%d-%H%M%S) && \
+		tar -czf $(BACKUP_DIR)/main-agent-$$TIM.tar.gz -C $(HOME_DIR)/.openclaw/agents/main/agent . 2>/dev/null && echo "✓ main" || echo "⚠ main (无)"; \
+		tar -czf $(BACKUP_DIR)/codex-agent-$$TIM.tar.gz -C $(HOME_DIR)/.openclaw/agents/codex/agent . 2>/dev/null && echo "✓ codex" || echo "⚠ codex (无)"; \
+		cp $(HOME_DIR)/.openclaw/openclaw.json $(BACKUP_DIR)/openclaw-$$TIM.json 2>/dev/null && echo "✓ config" || echo "⚠ config (无)"'
 	@echo "备份完成: $(BACKUP_DIR)"
 
 restore-config: ## 恢复配置
 ifndef FILE
 	@echo "用法: make restore-config FILE=<filename>"
-	@ls -lt $(BACKUP_DIR) 2>/dev/null | head -5 || echo "  (无备份)"
+	@sh -c 'ls -lt $(BACKUP_DIR) 2>/dev/null | head -5 || echo "  (无备份)"'
 	@exit 1
 endif
 	@echo "⚠ 确认恢复 $(FILE)? 按 Enter 确认"
-	@read confirm
-	@if [[ "$(FILE)" == *agent*.tar.gz ]]; then \
-		AGENT=$$(echo "$(FILE)" | sed 's/-agent-.*//'); \
-		mkdir -p $(HOME)/.openclaw/agents/$$AGENT/agent; \
-		tar -xzf $(BACKUP_DIR)/$(FILE) -C $(HOME)/.openclaw/agents/$$AGENT/agent; \
-		echo "✓ 已恢复 $$AGENT"; \
-	elif [[ "$(FILE)" == *.json ]]; then \
-		cp $(BACKUP_DIR)/$(FILE) $(HOME)/.openclaw/openclaw.json; \
-		echo "✓ 已恢复 config"; \
-	fi
+	@sh -c 'read confirm && \
+		if [[ "$(FILE)" == *agent*.tar.gz ]]; then \
+			AGENT=$$(echo "$(FILE)" | sed "s/-agent-.*//"); \
+			mkdir -p $(HOME_DIR)/.openclaw/agents/$$AGENT/agent; \
+			tar -xzf $(BACKUP_DIR)/$(FILE) -C $(HOME_DIR)/.openclaw/agents/$$AGENT/agent; \
+			echo "✓ 已恢复 $$AGENT"; \
+		elif [[ "$(FILE)" == *.json ]]; then \
+			cp $(BACKUP_DIR)/$(FILE) $(HOME_DIR)/.openclaw/openclaw.json; \
+			echo "✓ 已恢复 config"; \
+		fi'
 
 # ============================================================
 # 维护
 # ============================================================
 
 check-deps: ## 检查依赖
-	@echo "Docker: "; command -v docker >/dev/null 2>&1 && docker --version | cut -d' ' -f3 | xargs echo || echo "✗"
-	@echo "Compose: "; command -v docker >/dev/null 2>&1 && docker compose version --short 2>/dev/null || echo "✗"
+	@echo "Docker: "; sh -c 'command -v docker >/dev/null 2>&1 && docker --version | cut -d" " -f3 | xargs echo || echo "✗"'
+	@echo "Compose: "; sh -c 'command -v docker >/dev/null 2>&1 && docker compose version --short 2>/dev/null || echo "✗"'
 
 # ============================================================
 # 内部函数

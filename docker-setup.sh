@@ -18,9 +18,12 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IMAGE_NAME="${OPENCLAW_IMAGE:-openclaw-devkit}"
-# COMPOSE_FILE is managed by .env for flexibility
-# EXTRA_COMPOSE_FILE still used for on-the-fly mounts
-EXTRA_COMPOSE_FILE="$ROOT_DIR/docker-compose.dev.extra.yml"
+
+# OS Detection
+IS_WINDOWS=false
+if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+  IS_WINDOWS=true
+fi
 
 # ============================================================
 # Visual Styling (Whitepaper Grade)
@@ -355,6 +358,9 @@ export OPENCLAW_IMAGE="$IMAGE_NAME"
 # 检查并修复权限：如果目录已存在且属于其他用户，尝试自动修复
 repair_host_permissions() {
     local dir="$1"
+    if [[ "$IS_WINDOWS" == "true" ]]; then
+        return 0  # Skip on Windows host
+    fi
     if [[ -d "$dir" ]]; then
         # 兼容 Linux (stat -c) 和 macOS (stat -f)
         local dir_owner
@@ -501,10 +507,12 @@ success "环境变量同步完成"
 
 echo ""
 # 修复数据目录权限
-# Use -xdev to restrict chown to the config-dir mount only
-# 使用 root 用户修复权限，限制由于 openclaw-cli 仅挂载了 .openclaw 且为统一存储池
-docker compose run --rm --user root --entrypoint sh openclaw-cli -c \
-  'find /home/node/.openclaw -xdev -exec chown node:node {} + 2>/dev/null || true'
+if [[ "$IS_WINDOWS" == "false" ]]; then
+  # Use -xdev to restrict chown to the config-dir mount only
+  # 使用 root 用户修复权限，限制由于 openclaw-cli 仅挂载了 .openclaw 且为统一存储池
+  docker compose run --rm --user root --entrypoint sh openclaw-cli -c \
+    'find /home/node/.openclaw -xdev -exec chown node:node {} + 2>/dev/null || true'
+fi
 
 # ============================================================
 # 辅助函数：运行 CLI 命令
