@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [v1.5.6] - 2026-03-13
+
+### Fixed
+- **Gateway Access Control**: Relaxed `allowedOrigins` in `docker-entrypoint.sh` to include `http://localhost:18789` and `http://0.0.0.0:18789`, resolving "Origin not allowed" errors when accessing the Control UI via common local addresses.
+
 ## [v1.5.5] - 2026-03-13
 
 ### Fixed
