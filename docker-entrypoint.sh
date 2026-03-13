@@ -73,6 +73,53 @@ if [ ! -f "$CONFIG_FILE" ]; then
         # Allow failure here; often the config is created but a secondary gateway check fails.
         run_as_node openclaw onboard --non-interactive --accept-risk || true
     fi
+
+    # After onboarding, configure custom skills directories
+    if [ -f "$CONFIG_FILE" ]; then
+        echo "--> Creating custom skills directories..."
+        run_as_node mkdir -p /home/node/skills/custom-skills
+        run_as_node mkdir -p /home/node/skills/team-skills
+
+        echo "--> Configuring custom skills directories..."
+        run_as_node python3 -c '
+import json
+import os
+
+# 定义配置文件路径
+config_path = "/home/node/.openclaw/openclaw.json"
+
+# 确保目录存在（避免文件写入失败）
+os.makedirs(os.path.dirname(config_path), exist_ok=True)
+
+# 读取并更新配置
+try:
+    # 读取现有配置（文件不存在则创建空字典）
+    if os.path.exists(config_path):
+        with open(config_path, "r") as f:
+            config = json.load(f)
+    else:
+        config = {}
+
+    # 逐层初始化节点，避免KeyError
+    config["skills"] = config.get("skills", {})
+    config["skills"]["load"] = config["skills"].get("load", {})
+    # 设置自定义技能目录
+    config["skills"]["load"]["extraDirs"] = [
+        "/home/node/skills/custom-skills",
+        "/home/node/skills/team-skills"
+    ]
+    # 开启目录监听
+    config["skills"]["load"]["watch"] = True
+
+    # 写入配置（带缩进，保证可读性）
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=2)
+
+    print(f"配置更新成功！路径：{config_path}")
+except Exception as e:
+    print(f"配置更新失败：{str(e)}")
+' || echo "Warning: Failed to configure skills directories"
+    fi
 fi
 
 # 2.5 Ensure Claude Code Embedded Skills survive the host bind-mount
