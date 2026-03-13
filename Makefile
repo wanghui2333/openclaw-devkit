@@ -166,8 +166,8 @@ dev: ## 内部: 选择标准版
 # ============================================================
 
 install: ## 首次安装/初始化环境
-	@$(UTF8_FIX) $(if $(filter Unix,$(PLATFORM)),chmod +x $(SETUP_SCRIPT),)
-	@$(UTF8_FIX) $(call select_image,$(MAKECMDGOALS))
+	@$(UTF8_FIX) $(if $(filter Unix,$(PLATFORM)),chmod +x $(SETUP_SCRIPT),:)
+	@$(UTF8_FIX) $(call select_image,$(MAKECMDGOALS)) :
 	@$(UTF8_FIX) echo "$(INFO) 目标环境: $(BOLD)$(YELLOW)$(IMAGE_NAME)$(NC)"
 	@$(UTF8_FIX) OPENCLAW_IMAGE=$(IMAGE_NAME) sh $(SETUP_SCRIPT)
 	@$(UTF8_FIX) echo "$(SUCCESS) $(GREEN)环境安装完毕!$(NC)"
