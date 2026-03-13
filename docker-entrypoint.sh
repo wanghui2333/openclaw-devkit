@@ -56,7 +56,7 @@ if [ -f "$CONFIG_FILE" ]; then
             
             // 2. Force DevKit Gateway Best-Practices
             config.gateway = config.gateway || {};
-            config.gateway.bind = 'all';
+            config.gateway.bind = 'lan';
             config.gateway.mode = 'local';
             config.gateway.controlUi = config.gateway.controlUi || {};
             
@@ -131,7 +131,7 @@ fi
 # Run these as node to ensure generated metadata/temp files are owned correctly
 # Always set these values to ensure consistency across restarts and upgrades
 run_as_node openclaw config set gateway.mode local --strict-json >/dev/null 2>&1 || true
-run_as_node openclaw config set gateway.bind all --strict-json >/dev/null 2>&1 || true
+run_as_node openclaw config set gateway.bind lan --strict-json >/dev/null 2>&1 || true
 run_as_node openclaw config set gateway.controlUi.allowedOrigins "${OPENCLAW_ALLOWED_ORIGINS:-[\"http://127.0.0.1:18789\", \"http://localhost:18789\", \"http://0.0.0.0:18789\"]}" --strict-json >/dev/null 2>&1 || true
 
 # 4. Execute CMD
