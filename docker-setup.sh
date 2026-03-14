@@ -284,7 +284,7 @@ YAML
 # 参数解析
 # ============================================================
 
-INSTALL_BROWSER=1
+INSTALL_BROWSER=0
 while [[ $# -gt 0 ]]; do
   case $1 in
     --no-browser)

@@ -137,7 +137,7 @@ DOCKER_BUILD_ARGS := --build-arg HTTP_PROXY=$(HTTP_PROXY) \
                      --build-arg NPM_MIRROR=$(NPM_MIRROR) \
                      --build-arg PYTHON_MIRROR=$(PYTHON_MIRROR) \
                      --build-arg OPENCLAW_VERSION=$(if $(OPENCLAW_VERSION),$(OPENCLAW_VERSION),latest) \
-                     --build-arg INSTALL_BROWSER=$(if $(INSTALL_BROWSER),$(INSTALL_BROWSER),1)
+                     --build-arg INSTALL_BROWSER=$(if $(INSTALL_BROWSER),$(INSTALL_BROWSER),0)
 
 # ============================================================
 # 帮助信息 (现代分组版)
@@ -407,6 +407,33 @@ endif
 			cp $(BACKUP_DIR)/$(FILE) $(HOME_DIR)/.openclaw/openclaw.json; \
 			echo "✓ 已恢复 config"; \
 		fi'
+
+update: ## 从 GitHub 同步最新代码
+	@echo "$(INFO) 正在从 GitHub 同步最新代码..."
+	@if ! git diff --quiet 2>/dev/null; then \
+		echo "$(WARNING) 存在未暂存的更改，请先提交或暂存"; \
+		git status -s; \
+		exit 1; \
+	fi
+	@git fetch origin
+	@git status -sb | head -1
+	@echo ""
+	@BEHIND=$$(git rev-list --count HEAD..origin/$(shell git rev-parse --abbrev-ref HEAD) 2>/dev/null); \
+	AHEAD=$$(git rev-list --count origin/$(shell git rev-parse --abbrev-ref HEAD)..HEAD 2>/dev/null); \
+	if [ "$$BEHIND" -eq 0 ] && [ "$$AHEAD" -eq 0 ]; then \
+		echo "$(SUCCESS) 已是最新版本"; \
+	elif [ "$$BEHIND" -gt 0 ] && [ "$$AHEAD" -eq 0 ]; then \
+		echo "$(INFO) 落后远程 $$BEHIND 个提交，正在拉取..."; \
+		git pull --rebase; \
+		echo ""; \
+		echo "$(SUCCESS) 更新完成! 如需应用镜像更新，请执行:$(BOLD) make rebuild$(NC)"; \
+	elif [ "$$AHEAD" -gt 0 ] && [ "$$BEHIND" -eq 0 ]; then \
+		echo "$(INFO) 本地领先远程 $$AHEAD 个提交，无需更新"; \
+		echo "$(INFO) 如需推送，请执行:$(BOLD) git push$(NC)"; \
+	else \
+		echo "$(WARNING) 本地与远程已分叉 (领先 $$AHEAD，落后 $$BEHIND)"; \
+		echo "$(INFO) 请手动解决:$(BOLD) git rebase origin/$(shell git rev-parse --abbrev-ref HEAD)$(NC)"; \
+	fi
 
 # ============================================================
 # 维护

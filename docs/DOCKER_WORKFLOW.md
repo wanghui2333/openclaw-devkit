@@ -92,7 +92,7 @@ RUN npm install -g openclaw
 | `HTTP_PROXY`       | -                | 网络代理        |
 | `APT_MIRROR`       | `deb.debian.org` | Debian 镜像     |
 | `OPENCLAW_VERSION` | `latest`         | OpenClaw 版本   |
-| `INSTALL_BROWSER`  | `1`              | 安装 Playwright |
+| `INSTALL_BROWSER`  | `0`              | 安装 Playwright |
 
 ---
 
