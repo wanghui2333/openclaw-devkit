@@ -117,8 +117,11 @@ services:
     env_file:
       - .env
     environment:
-      - OPENCLAW_CONFIG_DIR=/home/node/.openclaw
-      - OPENCLAW_WORKSPACE_DIR=/home/node/.openclaw/workspace
+      # Extend common-env with gateway-specific variables
+      # Note: Must redefine all common-env vars because YAML merge override behavior
+      <<: *common-env
+      OPENCLAW_CONFIG_DIR: /home/node/.openclaw
+      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
     init: true
     volumes:
       # === 必需挂载 (Required) ===
